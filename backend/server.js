@@ -93,6 +93,9 @@ app.get('/api/books/:id', async (req, res) => {
   }
 });
 
+const onboardingRoutes = require('./routes/onboarding');
+app.use('/api/onboarding', onboardingRoutes);
+
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
