@@ -75,6 +75,8 @@ app.get('/api/books/:id', async (req, res) => {
 
 const PORT = process.env.PORT || 3001;
 
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
 app.listen(PORT, () => {
   console.log(`Bookish backend running on http://localhost:${PORT}`);
   console.log('Press Ctrl+C to stop');
