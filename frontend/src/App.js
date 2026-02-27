@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
+import CataloguePage from './pages/CataloguePage';
 
 // Placeholder pages (you will build these in coming days)
 function HomePage() { 
@@ -27,6 +28,8 @@ function AppRoutes() {
       <Route path='/onboarding' element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
 
       <Route path='/' element={<Navigate to={isLoggedIn ? '/home' : '/register'} replace />} />
+
+      <Route path='/books' element={<ProtectedRoute><CataloguePage /></ProtectedRoute>} />
     </Routes>
   );
 }
