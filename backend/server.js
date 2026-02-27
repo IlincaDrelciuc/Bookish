@@ -50,6 +50,10 @@ app.use('/api/books', bookRoutes);
 const onboardingRoutes = require('./routes/onboarding');
 app.use('/api/onboarding', onboardingRoutes);
 
+const readingListRoutes = require('./routes/readingList');
+app.use('/api/reading-list', readingListRoutes);
+
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Bookish backend running on http://localhost:${PORT}`);
