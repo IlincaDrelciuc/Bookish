@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import CataloguePage from './pages/CataloguePage';
 import BookDetailPage from './pages/BookDetailPage';
+import MyBooksPage from './pages/MyBooksPage';
 
 // Placeholder pages (you will build these in coming days)
 function HomePage() { 
@@ -33,6 +34,7 @@ function AppRoutes() {
       <Route path='/books' element={<ProtectedRoute><CataloguePage /></ProtectedRoute>} />
 
       <Route path='/books/:id' element={<ProtectedRoute><BookDetailPage /></ProtectedRoute>} />
+      <Route path='/my-books' element={<ProtectedRoute><MyBooksPage /></ProtectedRoute>} />
     </Routes>
   );
 }
