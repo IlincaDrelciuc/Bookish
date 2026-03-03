@@ -14,30 +14,84 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      backgroundColor:'white',
-      borderBottom:'1px solid #E2E8F0',
-      padding:'0 24px',
-      display:'flex',
-      alignItems:'center',
-      justifyContent:'space-between',
-      height:'60px',
-      position:'sticky',
-      top:0,
-      zIndex:100,
+      backgroundColor: '#0f0a06',
+      borderBottom: '1px solid rgba(212,175,100,0.15)',
+      padding: '0 40px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      height: '64px',
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+      boxShadow: '0 2px 20px rgba(0,0,0,0.4)',
     }}>
-      <Link to='/home' style={{textDecoration:'none',color:'#2563EB',fontWeight:'bold',fontSize:'20px',fontFamily:'Arial'}}>
-        📚 Bookish
+
+      <Link to='/home' style={{
+        textDecoration: 'none',
+        fontFamily: "'Playfair Display', Georgia, serif",
+        fontSize: '22px',
+        fontWeight: '700',
+        color: '#f0e0c0',
+        letterSpacing: '0.03em',
+      }}>
+        Bookish
       </Link>
-      <div style={{display:'flex',gap:'24px',alignItems:'center'}}>
-        <Link to='/books' style={{textDecoration:'none',color:'#475569',fontFamily:'Arial',fontSize:'15px'}}>Browse</Link>
-        <Link to='/my-books' style={{textDecoration:'none',color:'#475569',fontFamily:'Arial',fontSize:'15px'}}>My Books</Link>
-        <Link to='/stats' style={{textDecoration:'none',color:'#475569',fontFamily:'Arial',fontSize:'15px'}}>Stats</Link>
-        <span style={{color:'#94A3B8',fontSize:'14px',fontFamily:'Arial'}}>Hi, {user?.username}</span>
-        <button onClick={handleLogout} style={{padding:'6px 14px',border:'1px solid #E2E8F0',borderRadius:'6px',backgroundColor:'white',cursor:'pointer',color:'#64748B',fontSize:'14px'}}>
+
+      <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+        {[
+          { to: '/books', label: 'Browse' },
+          { to: '/my-books', label: 'My Books' },
+          { to: '/stats', label: 'Stats' },
+        ].map(({ to, label }) => (
+          <Link key={to} to={to} style={{
+            textDecoration: 'none',
+            color: 'rgba(232,213,176,0.6)',
+            fontFamily: "'Lora', Georgia, serif",
+            fontSize: '14px',
+            letterSpacing: '0.04em',
+            transition: 'color 0.2s',
+          }}
+          onMouseEnter={e => e.target.style.color = '#f0e0c0'}
+          onMouseLeave={e => e.target.style.color = 'rgba(232,213,176,0.6)'}
+          >
+            {label}
+          </Link>
+        ))}
+
+        <span style={{
+          color: 'rgba(212,175,100,0.5)',
+          fontFamily: "'Lora', Georgia, serif",
+          fontSize: '13px',
+          fontStyle: 'italic',
+        }}>
+          {user?.username}
+        </span>
+
+        <button onClick={handleLogout} style={{
+          padding: '7px 18px',
+          border: '1px solid rgba(212,175,100,0.25)',
+          borderRadius: '2px',
+          backgroundColor: 'transparent',
+          cursor: 'pointer',
+          color: 'rgba(232,213,176,0.5)',
+          fontFamily: "'Lora', Georgia, serif",
+          fontSize: '13px',
+          letterSpacing: '0.06em',
+          transition: 'all 0.2s',
+        }}
+        onMouseEnter={e => {
+          e.target.style.borderColor = 'rgba(212,175,100,0.5)';
+          e.target.style.color = '#f0e0c0';
+        }}
+        onMouseLeave={e => {
+          e.target.style.borderColor = 'rgba(212,175,100,0.25)';
+          e.target.style.color = 'rgba(232,213,176,0.5)';
+        }}
+        >
           Log out
         </button>
       </div>
     </nav>
   );
 }
-

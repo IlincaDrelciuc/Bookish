@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiCall } from '../utils/api';
 
+const BG_IMAGE = 'https://images.unsplash.com/photo-1507842217343-583bb7270b66';
+
 export default function OnboardingPage() {
-  const [step, setStep] = useState(1); // 1 = genres, 2 = prior books
+  const [step, setStep] = useState(1);
   const [genres, setGenres] = useState([]);
   const [selectedGenreIds, setSelectedGenreIds] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,50 +18,35 @@ export default function OnboardingPage() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  // Load genres when component first appears
   useEffect(() => {
     apiCall('GET', '/onboarding/genres')
       .then(data => setGenres(data))
       .catch(err => setError(err.message));
   }, []);
 
-  // Toggle a genre selected/deselected
   function toggleGenre(genreId) {
     setSelectedGenreIds(prev =>
-      prev.includes(genreId)
-        ? prev.filter(id => id !== genreId) // remove if already selected
-        : [...prev, genreId]                // add if not selected
+      prev.includes(genreId) ? prev.filter(id => id !== genreId) : [...prev, genreId]
     );
   }
 
-  // Search for books as user types
   useEffect(() => {
-    if (searchQuery.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    // Wait 400ms after user stops typing before searching
+    if (searchQuery.length < 2) { setSearchResults([]); return; }
     const timer = setTimeout(async () => {
       try {
         const data = await apiCall('GET', `/books/search?query=${encodeURIComponent(searchQuery)}&limit=8`);
         setSearchResults(data);
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     }, 400);
-    return () => clearTimeout(timer); // cleanup timer
+    return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Toggle a book selected/deselected
   function toggleBook(book) {
     setSelectedBooks(prev =>
-      prev.find(b => b.id === book.id)
-        ? prev.filter(b => b.id !== book.id)
-        : [...prev, book]
+      prev.find(b => b.id === book.id) ? prev.filter(b => b.id !== book.id) : [...prev, book]
     );
   }
 
-  // Submit the completed quiz
   async function handleFinish() {
     setLoading(true);
     try {
@@ -75,106 +62,343 @@ export default function OnboardingPage() {
     }
   }
 
-  if (error) return <div style={{padding:'20px',color:'red'}}>Error: {error}</div>;
+  const chipStyle = (selected) => ({
+    padding: '9px 20px',
+    borderRadius: '2px',
+    border: `1px solid ${selected ? '#8b6914' : 'rgba(100,70,20,0.25)'}`,
+    backgroundColor: selected ? 'rgba(139,105,20,0.15)' : 'rgba(255,250,240,0.6)',
+    color: selected ? '#5c3d0a' : '#6b4c1a',
+    fontFamily: "'Lora', Georgia, serif",
+    fontSize: '13px',
+    fontWeight: selected ? '600' : '400',
+    cursor: 'pointer',
+    letterSpacing: '0.04em',
+    transition: 'all 0.15s',
+  });
+
+  if (error) return (
+    <div style={{
+      minHeight: '100vh',
+      background: '#0f0a06',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: '#e09090',
+      fontFamily: "'Lora', Georgia, serif",
+    }}>
+      Error: {error}
+    </div>
+  );
 
   return (
-    <div style={{maxWidth:'700px',margin:'0 auto',padding:'40px 20px',fontFamily:'Arial,sans-serif'}}>
-      <h1 style={{color:'#2563EB'}}>📚 Welcome to Bookish!</h1>
-      <p style={{color:'#64748B'}}>Let's personalise your experience. This takes less than 2 minutes.</p>
+    <div style={{
+      minHeight: '100vh',
+      backgroundImage: `url(${BG_IMAGE})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '40px 20px',
+      fontFamily: "'Lora', Georgia, serif",
+      position: 'relative',
+    }}>
 
-      {/* Progress indicator */}
-      <div style={{display:'flex',gap:'8px',marginBottom:'32px'}}>
-        {[1,2].map(s => (
-          <div key={s} style={{
-            height:'4px',flex:1,borderRadius:'2px',
-            backgroundColor: step >= s ? '#2563EB' : '#E2E8F0'
-          }} />
-        ))}
-      </div>
+      {/* Dark overlay over photo */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(10,6,2,0.55)',
+        zIndex: 0,
+      }} />
 
-      {/* STEP 1: Genre Selection */}
-      {step === 1 && (
-        <div>
-          <h2>Step 1: What genres do you love?</h2>
-          <p style={{color:'#64748B'}}>Select at least 3 genres. ({selectedGenreIds.length} selected)</p>
-          <div style={{display:'flex',flexWrap:'wrap',gap:'10px',marginBottom:'24px'}}>
-            {genres.map(genre => (
-              <button
-                key={genre.id}
-                onClick={() => toggleGenre(genre.id)}
-                style={{
-                  padding:'10px 18px',
-                  borderRadius:'20px',
-                  border: selectedGenreIds.includes(genre.id) ? '2px solid #2563EB' : '2px solid #E2E8F0',
-                  backgroundColor: selectedGenreIds.includes(genre.id) ? '#EFF6FF' : 'white',
-                  color: selectedGenreIds.includes(genre.id) ? '#2563EB' : '#374151',
-                  fontWeight: selectedGenreIds.includes(genre.id) ? 'bold' : 'normal',
-                  cursor:'pointer',
-                  fontSize:'15px',
-                }}
-              >
-                {genre.name}
-              </button>
+      <div style={{
+        position: 'relative',
+        zIndex: 1,
+        maxWidth: '640px',
+        width: '100%',
+        background: 'rgba(255,248,230,0.97)',
+        border: '1px solid rgba(180,140,60,0.3)',
+        borderRadius: '4px',
+        padding: '56px 52px',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+      }}>
+
+        <div style={{ marginBottom: '40px' }}>
+          <span style={{
+            fontFamily: "'Playfair Display', Georgia, serif",
+            fontSize: '26px',
+            fontWeight: '700',
+            color: '#2c1a06',
+            letterSpacing: '0.02em',
+            display: 'block',
+            marginBottom: '6px',
+          }}>
+            Bookish
+          </span>
+          <p style={{
+            color: '#8b6530',
+            fontSize: '13px',
+            fontStyle: 'italic',
+            marginBottom: '28px',
+          }}>
+            Let's personalise your reading experience
+          </p>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {[1, 2].map(s => (
+              <div key={s} style={{
+                height: '2px',
+                flex: 1,
+                borderRadius: '1px',
+                backgroundColor: step >= s ? '#8b6914' : 'rgba(139,105,20,0.2)',
+                transition: 'background-color 0.3s',
+              }} />
             ))}
           </div>
-          <button
-            onClick={() => setStep(2)}
-            disabled={selectedGenreIds.length < 3}
-            style={{
-              padding:'12px 28px',backgroundColor: selectedGenreIds.length >= 3 ? '#2563EB' : '#CBD5E1',
-              color:'white',border:'none',borderRadius:'8px',fontSize:'16px',cursor: selectedGenreIds.length >= 3 ? 'pointer' : 'not-allowed'
-            }}
-          >
-            Continue →
-          </button>
         </div>
-      )}
 
-      {/* STEP 2: Prior Reading */}
-      {step === 2 && (
-        <div>
-          <h2>Step 2: Any books you've already read?</h2>
-          <p style={{color:'#64748B'}}>This helps us recommend better. You can skip this step.</p>
-          <input
-            type='text'
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder='Search by title or author...'
-            style={{width:'100%',padding:'12px',border:'1px solid #D1D5DB',borderRadius:'8px',fontSize:'16px',boxSizing:'border-box',marginBottom:'12px'}}
-          />
-          {searchResults.map(book => (
-            <div key={book.id} onClick={() => toggleBook(book)} style={{
-              display:'flex',gap:'12px',padding:'10px',border:'1px solid #E2E8F0',borderRadius:'8px',
-              marginBottom:'8px',cursor:'pointer',
-              backgroundColor: selectedBooks.find(b=>b.id===book.id) ? '#EFF6FF' : 'white'
+        {step === 1 && (
+          <div>
+            <span style={{
+              color: '#8b6530',
+              fontSize: '11px',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              display: 'block',
+              marginBottom: '10px',
             }}>
-              <img src={book.cover_image_url} alt={book.title} style={{width:'40px',height:'60px',objectFit:'cover'}}
-                onError={e=>{e.target.style.display='none'}} />
-              <div>
-                <div style={{fontWeight:'bold'}}>{book.title}</div>
-                <div style={{color:'#64748B',fontSize:'14px'}}>{(book.authors||[]).join(', ')}</div>
-                {selectedBooks.find(b=>b.id===book.id) && <div style={{color:'#2563EB',fontSize:'13px'}}>✓ Added</div>}
-              </div>
+              Step 1 of 2
+            </span>
+            <h2 style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: '24px',
+              fontWeight: '600',
+              color: '#2c1a06',
+              marginBottom: '8px',
+              marginTop: 0,
+            }}>
+              What genres do you love?
+            </h2>
+            <p style={{
+              color: '#8b6530',
+              fontSize: '13px',
+              fontStyle: 'italic',
+              marginBottom: '28px',
+            }}>
+              Select at least 3 — {selectedGenreIds.length} selected
+            </p>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '36px' }}>
+              {genres.map(genre => (
+                <button
+                  key={genre.id}
+                  onClick={() => toggleGenre(genre.id)}
+                  style={chipStyle(selectedGenreIds.includes(genre.id))}
+                >
+                  {genre.name}
+                </button>
+              ))}
             </div>
-          ))}
-          {selectedBooks.length > 0 && (
-            <div style={{marginBottom:'16px'}}>
-              <strong>Books you've read ({selectedBooks.length}):</strong>
-              <div style={{display:'flex',flexWrap:'wrap',gap:'8px',marginTop:'8px'}}>
-                {selectedBooks.map(b=>(<span key={b.id} style={{backgroundColor:'#EFF6FF',color:'#2563EB',padding:'4px 10px',borderRadius:'12px',fontSize:'13px'}}>{b.title}</span>))}
-              </div>
-            </div>
-          )}
-          <div style={{display:'flex',gap:'12px',marginTop:'16px'}}>
-            <button onClick={handleFinish} disabled={loading} style={{padding:'12px 28px',backgroundColor:'#2563EB',color:'white',border:'none',borderRadius:'8px',fontSize:'16px',cursor:'pointer'}}>
-              {loading ? 'Saving...' : 'Finish Setup →'}
-            </button>
-            <button onClick={handleFinish} style={{padding:'12px 28px',backgroundColor:'white',color:'#64748B',border:'1px solid #D1D5DB',borderRadius:'8px',fontSize:'16px',cursor:'pointer'}}>
-              Skip for now
+
+            <button
+              onClick={() => setStep(2)}
+              disabled={selectedGenreIds.length < 3}
+              style={{
+                width: '100%',
+                padding: '13px',
+                background: selectedGenreIds.length >= 3
+                  ? 'linear-gradient(135deg, #8b6914 0%, #6b4f10 100%)'
+                  : 'rgba(139,105,20,0.1)',
+                border: '1px solid rgba(139,105,20,0.3)',
+                borderRadius: '2px',
+                color: selectedGenreIds.length >= 3 ? '#fff8ee' : 'rgba(100,70,20,0.3)',
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontSize: '13px',
+                fontWeight: '600',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                cursor: selectedGenreIds.length >= 3 ? 'pointer' : 'not-allowed',
+                transition: 'all 0.2s',
+              }}
+            >
+              Continue
             </button>
           </div>
-        </div>
-      )}
+        )}
+
+        {step === 2 && (
+          <div>
+            <span style={{
+              color: '#8b6530',
+              fontSize: '11px',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              display: 'block',
+              marginBottom: '10px',
+            }}>
+              Step 2 of 2
+            </span>
+            <h2 style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: '24px',
+              fontWeight: '600',
+              color: '#2c1a06',
+              marginBottom: '8px',
+              marginTop: 0,
+            }}>
+              Books you've already read
+            </h2>
+            <p style={{
+              color: '#8b6530',
+              fontSize: '13px',
+              fontStyle: 'italic',
+              marginBottom: '24px',
+            }}>
+              This helps us recommend better. You can skip this step.
+            </p>
+
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search by title or author..."
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: 'rgba(255,250,240,0.8)',
+                border: '1px solid rgba(139,105,20,0.3)',
+                borderRadius: '2px',
+                color: '#2c1a06',
+                fontSize: '14px',
+                fontFamily: "'Lora', Georgia, serif",
+                marginBottom: '16px',
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+
+            {searchResults.map(book => {
+              const selected = selectedBooks.find(b => b.id === book.id);
+              return (
+                <div key={book.id} onClick={() => toggleBook(book)} style={{
+                  display: 'flex',
+                  gap: '12px',
+                  padding: '12px',
+                  border: `1px solid ${selected ? '#8b6914' : 'rgba(139,105,20,0.2)'}`,
+                  borderRadius: '2px',
+                  marginBottom: '8px',
+                  cursor: 'pointer',
+                  backgroundColor: selected ? 'rgba(139,105,20,0.1)' : 'rgba(255,250,240,0.6)',
+                  transition: 'all 0.15s',
+                }}>
+                  <img
+                    src={book.cover_image_url}
+                    alt={book.title}
+                    style={{ width: '36px', height: '54px', objectFit: 'cover', borderRadius: '1px' }}
+                    onError={e => { e.target.style.display = 'none'; }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontFamily: "'Lora', Georgia, serif",
+                      fontSize: '14px',
+                      color: '#2c1a06',
+                      marginBottom: '3px',
+                    }}>
+                      {book.title}
+                    </div>
+                    <div style={{
+                      color: '#8b6530',
+                      fontSize: '12px',
+                      fontStyle: 'italic',
+                    }}>
+                      {(book.authors || []).join(', ')}
+                    </div>
+                  </div>
+                  {selected && (
+                    <span style={{ color: '#8b6914', fontSize: '16px', alignSelf: 'center' }}>✓</span>
+                  )}
+                </div>
+              );
+            })}
+
+            {selectedBooks.length > 0 && (
+              <div style={{ marginBottom: '20px', marginTop: '8px' }}>
+                <span style={{
+                  fontSize: '11px',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: '#8b6530',
+                  display: 'block',
+                  marginBottom: '10px',
+                }}>
+                  Added ({selectedBooks.length})
+                </span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {selectedBooks.map(b => (
+                    <span key={b.id} style={chipStyle(true)}>{b.title}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '28px' }}>
+              <button
+                onClick={() => setStep(1)}
+                style={{
+                  padding: '13px 24px',
+                  background: 'transparent',
+                  border: '1px solid rgba(139,105,20,0.3)',
+                  borderRadius: '2px',
+                  color: '#8b6530',
+                  fontFamily: "'Lora', Georgia, serif",
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Back
+              </button>
+              <button
+                onClick={handleFinish}
+                disabled={loading}
+                style={{
+                  flex: 1,
+                  padding: '13px',
+                  background: 'linear-gradient(135deg, #8b6914 0%, #6b4f10 100%)',
+                  border: '1px solid rgba(139,105,20,0.3)',
+                  borderRadius: '2px',
+                  color: '#fff8ee',
+                  fontFamily: "'Playfair Display', Georgia, serif",
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                }}
+              >
+                {loading ? 'Saving...' : 'Begin Reading'}
+              </button>
+              <button
+                onClick={handleFinish}
+                style={{
+                  padding: '13px 20px',
+                  background: 'transparent',
+                  border: '1px solid rgba(139,105,20,0.3)',
+                  borderRadius: '2px',
+                  color: '#8b6530',
+                  fontFamily: "'Lora', Georgia, serif",
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  letterSpacing: '0.04em',
+                }}
+              >
+                Skip
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

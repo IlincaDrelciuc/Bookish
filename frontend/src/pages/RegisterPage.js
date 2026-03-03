@@ -1,116 +1,314 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { apiCall } from '../utils/api';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+
+const LIBRARY_IMAGE = 'https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=900&q=85';
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #0f0a06 0%, #1a1008 40%, #0d0b08 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  noise: {
+    position: 'fixed',
+    inset: 0,
+    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E")`,
+    pointerEvents: 'none',
+    zIndex: 0,
+  },
+  card: {
+    position: 'relative',
+    zIndex: 1,
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    maxWidth: '920px',
+    width: '100%',
+    background: 'rgba(20, 13, 6, 0.85)',
+    border: '1px solid rgba(212, 175, 100, 0.18)',
+    borderRadius: '4px',
+    overflow: 'hidden',
+    boxShadow: '0 32px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(212,175,100,0.1)',
+  },
+  imagePanel: {
+    position: 'relative',
+    minHeight: '600px',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  },
+  imageOverlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(to right, rgba(10,6,2,0.2) 0%, rgba(10,6,2,0.65) 100%)',
+  },
+  imageBranding: {
+  position: 'absolute',
+  bottom: '40px',
+  left: '36px',
+  right: '36px',
+  background: 'rgba(10,6,2,0.55)',
+  backdropFilter: 'blur(4px)',
+  padding: '20px 24px',
+  borderLeft: '2px solid rgba(212,175,100,0.4)',
+},
+  brandName: {
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontSize: '38px',
+    fontWeight: '700',
+    color: '#f0e0c0',
+    letterSpacing: '0.02em',
+    lineHeight: 1,
+    display: 'block',
+  },
+  brandTagline: {
+    fontFamily: "'Lora', Georgia, serif",
+    fontSize: '13px',
+    color: 'rgba(240,224,192,0.55)',
+    fontStyle: 'italic',
+    marginTop: '8px',
+    display: 'block',
+    letterSpacing: '0.04em',
+  },
+  formPanel: {
+    padding: '48px 48px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  ornament: {
+    color: 'rgba(212,175,100,0.5)',
+    fontSize: '20px',
+    letterSpacing: '8px',
+    marginBottom: '24px',
+    display: 'block',
+  },
+  heading: {
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontSize: '28px',
+    fontWeight: '600',
+    color: '#f0e0c0',
+    marginBottom: '6px',
+    lineHeight: 1.2,
+  },
+  subheading: {
+    fontFamily: "'Lora', Georgia, serif",
+    fontSize: '13px',
+    color: 'rgba(232,213,176,0.45)',
+    fontStyle: 'italic',
+    marginBottom: '28px',
+    letterSpacing: '0.02em',
+  },
+  divider: {
+    width: '40px',
+    height: '1px',
+    background: 'rgba(212,175,100,0.4)',
+    marginBottom: '24px',
+  },
+  label: {
+    display: 'block',
+    fontFamily: "'Lora', Georgia, serif",
+    fontSize: '11px',
+    fontWeight: '500',
+    color: 'rgba(232,213,176,0.5)',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    marginBottom: '7px',
+  },
+  input: {
+    width: '100%',
+    padding: '11px 15px',
+    background: 'rgba(255,245,220,0.05)',
+    border: '1px solid rgba(212,175,100,0.2)',
+    borderRadius: '2px',
+    color: '#e8d5b0',
+    fontSize: '14px',
+    fontFamily: "'Lora', Georgia, serif",
+    marginBottom: '18px',
+    transition: 'border-color 0.2s, background 0.2s',
+    outline: 'none',
+  },
+  button: {
+    width: '100%',
+    padding: '13px',
+    background: 'linear-gradient(135deg, #8b6914 0%, #6b4f10 100%)',
+    border: '1px solid rgba(212,175,100,0.3)',
+    borderRadius: '2px',
+    color: '#f5e6c0',
+    fontSize: '13px',
+    fontFamily: "'Playfair Display', Georgia, serif",
+    fontWeight: '600',
+    letterSpacing: '0.15em',
+    textTransform: 'uppercase',
+    cursor: 'pointer',
+    marginTop: '4px',
+    transition: 'opacity 0.2s',
+  },
+  error: {
+    background: 'rgba(160,40,40,0.15)',
+    border: '1px solid rgba(160,40,40,0.35)',
+    borderRadius: '2px',
+    padding: '10px 14px',
+    marginBottom: '16px',
+    color: '#e09090',
+    fontSize: '13px',
+    fontFamily: "'Lora', Georgia, serif",
+  },
+  footer: {
+    textAlign: 'center',
+    marginTop: '24px',
+    fontFamily: "'Lora', Georgia, serif",
+    fontSize: '13px',
+    color: 'rgba(232,213,176,0.35)',
+    fontStyle: 'italic',
+  },
+  link: {
+    color: 'rgba(212,175,100,0.8)',
+    textDecoration: 'none',
+  },
+};
 
 export default function RegisterPage() {
-  // Form field values
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
-  // UI state
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const { login } = useAuth();
-  // useNavigate lets us redirect the user to another page
   const navigate = useNavigate();
 
+  const focusStyle = (e) => {
+    e.target.style.borderColor = 'rgba(212,175,100,0.5)';
+    e.target.style.background = 'rgba(255,245,220,0.08)';
+  };
+  const blurStyle = (e) => {
+    e.target.style.borderColor = 'rgba(212,175,100,0.2)';
+    e.target.style.background = 'rgba(255,245,220,0.05)';
+  };
+
   async function handleSubmit(e) {
-    // Prevent the form from reloading the page (default HTML behaviour)
     e.preventDefault();
     setError('');
+    if (password !== confirm) {
+      setError('Passwords do not match');
+      return;
+    }
     setLoading(true);
-
     try {
-      const data = await apiCall('POST', '/auth/register', {
-        email, username, password
+      const res = await fetch('http://localhost:3001/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, username, password }),
       });
-
-      // Save the user and token
-      login(data.user, data.token);
-
-      // Redirect to onboarding or home
-      if (data.needsOnboarding) {
-        navigate('/onboarding');
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Registration failed');
       } else {
-        navigate('/home');
+        localStorage.setItem('token', data.token);
+        navigate('/onboarding');
       }
-
-    } catch (err) {
-      setError(err.message);
+    } catch {
+      setError('Cannot connect to server');
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={styles.container}>
+    <div style={styles.page}>
+      <div style={styles.noise} />
       <div style={styles.card}>
-        <h1 style={styles.title}>📚 Join Bookish</h1>
-        <p style={styles.subtitle}>Start your reading journey</p>
 
-        {error && <div style={styles.error}>{error}</div>}
+        {/* Image panel */}
+        <div style={{
+          ...styles.imagePanel,
+          backgroundImage: `url(${LIBRARY_IMAGE})`,
+        }}>
+          <div style={styles.imageOverlay} />
+          <div style={styles.imageBranding}>
+            <span style={styles.brandName}>Bookish</span>
+            <span style={styles.brandTagline}>Begin your reading story</span>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div style={styles.field}>
-            <label style={styles.label}>Email</label>
+        {/* Form panel */}
+        <div style={styles.formPanel}>
+          <span style={styles.ornament}>— ✦ —</span>
+          <h1 style={styles.heading}>Create your account</h1>
+          <p style={styles.subheading}>Join a community of readers</p>
+          <div style={styles.divider} />
+
+          {error && <div style={styles.error}>{error}</div>}
+
+          <form onSubmit={handleSubmit}>
+            <label style={styles.label}>Email address</label>
             <input
-              type='email'
+              style={styles.input}
+              type="email"
+              placeholder="your.email@example.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              style={styles.input}
-              placeholder='your@email.com'
+              onFocus={focusStyle}
+              onBlur={blurStyle}
               required
             />
-          </div>
 
-          <div style={styles.field}>
             <label style={styles.label}>Username</label>
             <input
-              type='text'
+              style={styles.input}
+              type="text"
+              placeholder="Choose a username"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              style={styles.input}
-              placeholder='Choose a username'
+              onFocus={focusStyle}
+              onBlur={blurStyle}
               required
             />
-          </div>
 
-          <div style={styles.field}>
             <label style={styles.label}>Password</label>
             <input
-              type='password'
+              style={styles.input}
+              type="password"
+              placeholder="Create a password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              style={styles.input}
-              placeholder='At least 8 characters'
+              onFocus={focusStyle}
+              onBlur={blurStyle}
               required
             />
-          </div>
 
-          <button type='submit' style={styles.button} disabled={loading}>
-            {loading ? 'Creating account...' : 'Create Account'}
-          </button>
-        </form>
+            <label style={styles.label}>Confirm password</label>
+            <input
+              style={styles.input}
+              type="password"
+              placeholder="Repeat your password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              onFocus={focusStyle}
+              onBlur={blurStyle}
+              required
+            />
 
-        <p style={{textAlign:'center', marginTop:'16px'}}>
-          Already have an account? <Link to='/login'>Log in</Link>
-        </p>
+            <button
+              style={styles.button}
+              type="submit"
+              disabled={loading}
+              onMouseEnter={e => e.target.style.opacity = '0.85'}
+              onMouseLeave={e => e.target.style.opacity = '1'}
+            >
+              {loading ? 'Creating account...' : 'Create Account'}
+            </button>
+          </form>
+
+          <p style={styles.footer}>
+            Already have an account?{' '}
+            <Link to="/login" style={styles.link}>Sign in here</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
-
-const styles = {
-  container: { minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', backgroundColor:'#f8fafc' },
-  card: { backgroundColor:'white', padding:'40px', borderRadius:'12px', boxShadow:'0 4px 6px rgba(0,0,0,0.07)', width:'100%', maxWidth:'400px' },
-  title: { margin:'0 0 8px 0', color:'#2563EB', fontSize:'28px' },
-  subtitle: { margin:'0 0 24px 0', color:'#64748B' },
-  error: { backgroundColor:'#FEF2F2', color:'#B91C1C', padding:'12px', borderRadius:'8px', marginBottom:'16px', fontSize:'14px' },
-  field: { marginBottom:'16px' },
-  label: { display:'block', marginBottom:'6px', fontWeight:'bold', color:'#374151', fontSize:'14px' },
-  input: { width:'100%', padding:'10px 12px', border:'1px solid #D1D5DB', borderRadius:'8px', fontSize:'16px', boxSizing:'border-box' },
-  button: { width:'100%', padding:'12px', backgroundColor:'#2563EB', color:'white', border:'none', borderRadius:'8px', fontSize:'16px', fontWeight:'bold', cursor:'pointer' },
-};

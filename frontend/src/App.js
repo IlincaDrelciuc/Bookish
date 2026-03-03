@@ -7,11 +7,8 @@ import CataloguePage from './pages/CataloguePage';
 import BookDetailPage from './pages/BookDetailPage';
 import MyBooksPage from './pages/MyBooksPage';
 import StatsPage from './pages/StatsPage';
+import HomePage from './pages/HomePage';
 import Navbar from './components/Navbar';
-
-function HomePage() { 
-  return <div style={{padding:'20px'}}><h1>📚 Bookish Home</h1><p>Coming soon — Week 5</p></div>; 
-}
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn, loading } = useAuth();
@@ -28,15 +25,12 @@ function AppRoutes() {
       <Routes>
         <Route path='/register' element={<RegisterPage />} />
         <Route path='/login' element={<LoginPage />} />
-
         <Route path='/home' element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path='/onboarding' element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
-
         <Route path='/books' element={<ProtectedRoute><CataloguePage /></ProtectedRoute>} />
         <Route path='/books/:id' element={<ProtectedRoute><BookDetailPage /></ProtectedRoute>} />
         <Route path='/my-books' element={<ProtectedRoute><MyBooksPage /></ProtectedRoute>} />
         <Route path='/stats' element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
-
         <Route path='/' element={<Navigate to={isLoggedIn ? '/home' : '/register'} replace />} />
       </Routes>
     </>
