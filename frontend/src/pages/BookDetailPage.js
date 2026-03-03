@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiCall } from '../utils/api';
 
 export default function BookDetailPage() {
-  // useParams reads the :id from the URL
   const { id } = useParams();
   const { token, isLoggedIn } = useAuth();
 
@@ -13,6 +12,11 @@ export default function BookDetailPage() {
   const [addingStatus, setAddingStatus] = useState('');
   const [addSuccess, setAddSuccess] = useState('');
   const [error, setError] = useState('');
+
+  const [reviewText, setReviewText] = useState('');
+  const [reviewScore, setReviewScore] = useState(5);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState('');
 
   useEffect(() => {
     apiCall('GET', `/books/${id}`)
@@ -32,6 +36,24 @@ export default function BookDetailPage() {
     }
   }
 
+  async function submitReview() {
+    if (!reviewText.trim()) return;
+    setReviewSubmitting(true);
+    try {
+      await apiCall('POST', '/reviews', {
+        bookId: parseInt(id),
+        body: reviewText,
+        score: reviewScore,
+      }, token);
+      setReviewSuccess('Review submitted!');
+      setReviewText('');
+      const updated = await apiCall('GET', `/books/${id}`);
+      setBook(updated);
+      setTimeout(() => setReviewSuccess(''), 3000);
+    } catch(err) { setError(err.message); }
+    finally { setReviewSubmitting(false); }
+  }
+
   if (loading) return <div style={{padding:'40px',textAlign:'center'}}>Loading book details...</div>;
   if (error) return <div style={{padding:'40px',color:'red'}}>Error: {error}</div>;
   if (!book) return <div style={{padding:'40px'}}>Book not found.</div>;
@@ -39,10 +61,7 @@ export default function BookDetailPage() {
   return (
     <div style={{maxWidth:'900px',margin:'0 auto',padding:'32px 20px',fontFamily:'Arial,sans-serif'}}>
 
-      {/* Top section: cover + info side by side */}
       <div style={{display:'flex',gap:'32px',marginBottom:'40px',flexWrap:'wrap'}}>
-
-        {/* Cover Image */}
         <div style={{flexShrink:0}}>
           {book.cover_image_url ? (
             <img src={book.cover_image_url} alt={book.title}
@@ -54,14 +73,12 @@ export default function BookDetailPage() {
           )}
         </div>
 
-        {/* Book metadata */}
         <div style={{flex:1,minWidth:'250px'}}>
           <h1 style={{margin:'0 0 8px 0',fontSize:'28px',color:'#1E293B'}}>{book.title}</h1>
           <p style={{margin:'0 0 8px 0',fontSize:'18px',color:'#64748B'}}>
             by {(book.authors||[]).map(a=>a.name).join(', ')}
           </p>
 
-          {/* Rating */}
           <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'12px'}}>
             <span style={{fontSize:'22px',color:'#F59E0B'}}>
               {'★'.repeat(Math.round(book.communityRating?.average||0))}
@@ -72,20 +89,17 @@ export default function BookDetailPage() {
             </span>
           </div>
 
-          {/* Genres */}
           <div style={{display:'flex',flexWrap:'wrap',gap:'6px',marginBottom:'16px'}}>
             {(book.genres||[]).map(g => (
               <span key={g.id} style={{backgroundColor:'#EFF6FF',color:'#2563EB',padding:'4px 10px',borderRadius:'12px',fontSize:'13px'}}>{g.name}</span>
             ))}
           </div>
 
-          {/* Metadata */}
           <div style={{color:'#64748B',fontSize:'14px',marginBottom:'20px'}}>
             {book.publication_year && <div>Published: {book.publication_year}</div>}
             {book.page_count && <div>{book.page_count} pages</div>}
           </div>
 
-          {/* Add to Reading List Buttons */}
           {addSuccess && <div style={{color:'#15803D',fontWeight:'bold',marginBottom:'12px'}}>{addSuccess}</div>}
           <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
             {[
@@ -102,7 +116,6 @@ export default function BookDetailPage() {
         </div>
       </div>
 
-      {/* Synopsis */}
       {book.synopsis && (
         <div style={{marginBottom:'40px'}}>
           <h2 style={{color:'#1E293B',marginBottom:'12px'}}>About this book</h2>
@@ -110,9 +123,29 @@ export default function BookDetailPage() {
         </div>
       )}
 
-      {/* Reviews */}
       <div>
         <h2 style={{color:'#1E293B',marginBottom:'16px'}}>Reader Reviews ({book.reviews?.length || 0})</h2>
+
+        <div style={{backgroundColor:'#F8FAFC',padding:'20px',borderRadius:'10px',marginBottom:'24px'}}>
+          <h3 style={{marginTop:0}}>Write a Review</h3>
+          <div style={{display:'flex',gap:'8px',marginBottom:'12px'}}>
+            {[1,2,3,4,5].map(n => (
+              <button key={n} onClick={() => setReviewScore(n)}
+                style={{fontSize:'24px',border:'none',background:'none',cursor:'pointer',
+                  color: n<=reviewScore ? '#F59E0B' : '#D1D5DB'}}>★</button>
+            ))}
+          </div>
+          <textarea value={reviewText} onChange={e => setReviewText(e.target.value)}
+            placeholder='Share your thoughts about this book...'
+            rows={4} style={{width:'100%',padding:'10px',border:'1px solid #D1D5DB',borderRadius:'8px',fontSize:'15px',boxSizing:'border-box',resize:'vertical'}}
+          />
+          {reviewSuccess && <div style={{color:'#15803D',marginTop:'8px',fontWeight:'bold'}}>{reviewSuccess}</div>}
+          <button onClick={submitReview} disabled={reviewSubmitting||!reviewText.trim()}
+            style={{marginTop:'10px',padding:'10px 20px',backgroundColor:'#2563EB',color:'white',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'15px'}}>
+            {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+          </button>
+        </div>
+
         {book.reviews?.length === 0 && <p style={{color:'#94A3B8'}}>No reviews yet. Be the first to review!</p>}
         {(book.reviews||[]).map(review => (
           <div key={review.id} style={{borderBottom:'1px solid #F1F5F9',paddingBottom:'16px',marginBottom:'16px'}}>

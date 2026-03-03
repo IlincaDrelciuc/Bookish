@@ -6,8 +6,9 @@ import OnboardingPage from './pages/OnboardingPage';
 import CataloguePage from './pages/CataloguePage';
 import BookDetailPage from './pages/BookDetailPage';
 import MyBooksPage from './pages/MyBooksPage';
+import StatsPage from './pages/StatsPage';
+import Navbar from './components/Navbar';
 
-// Placeholder pages (you will build these in coming days)
 function HomePage() { 
   return <div style={{padding:'20px'}}><h1>📚 Bookish Home</h1><p>Coming soon — Week 5</p></div>; 
 }
@@ -22,20 +23,23 @@ function ProtectedRoute({ children }) {
 function AppRoutes() {
   const { isLoggedIn } = useAuth();
   return (
-    <Routes>
-      <Route path='/register' element={<RegisterPage />} />
-      <Route path='/login' element={<LoginPage />} />
+    <>
+      <Navbar />
+      <Routes>
+        <Route path='/register' element={<RegisterPage />} />
+        <Route path='/login' element={<LoginPage />} />
 
-      <Route path='/home' element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-      <Route path='/onboarding' element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
+        <Route path='/home' element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path='/onboarding' element={<ProtectedRoute><OnboardingPage /></ProtectedRoute>} />
 
-      <Route path='/' element={<Navigate to={isLoggedIn ? '/home' : '/register'} replace />} />
+        <Route path='/books' element={<ProtectedRoute><CataloguePage /></ProtectedRoute>} />
+        <Route path='/books/:id' element={<ProtectedRoute><BookDetailPage /></ProtectedRoute>} />
+        <Route path='/my-books' element={<ProtectedRoute><MyBooksPage /></ProtectedRoute>} />
+        <Route path='/stats' element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
 
-      <Route path='/books' element={<ProtectedRoute><CataloguePage /></ProtectedRoute>} />
-
-      <Route path='/books/:id' element={<ProtectedRoute><BookDetailPage /></ProtectedRoute>} />
-      <Route path='/my-books' element={<ProtectedRoute><MyBooksPage /></ProtectedRoute>} />
-    </Routes>
+        <Route path='/' element={<Navigate to={isLoggedIn ? '/home' : '/register'} replace />} />
+      </Routes>
+    </>
   );
 }
 

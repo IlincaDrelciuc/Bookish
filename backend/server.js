@@ -41,6 +41,54 @@ app.get('/api/me', authenticate, async (req, res) => {
   }
 });
 
+app.get('/api/stats', authenticate, async (req, res) => {
+  const userId = req.user.userId;
+  try {
+    const total = await pool.query(
+      "SELECT COUNT(*) FROM reading_list WHERE user_id=$1 AND status='finished'",
+      [userId]
+    );
+
+    const monthly = await pool.query(
+      `SELECT TO_CHAR(finish_date, 'Mon') as month,
+       EXTRACT(MONTH FROM finish_date)::integer as month_num,
+       COUNT(*) as count
+       FROM reading_list
+       WHERE user_id=$1 AND status='finished'
+       AND EXTRACT(YEAR FROM finish_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+       GROUP BY month, month_num ORDER BY month_num`,
+      [userId]
+    );
+
+    const topGenres = await pool.query(
+      `SELECT g.name, COUNT(*) as count
+       FROM reading_list rl
+       JOIN book_genres bg ON rl.book_id = bg.book_id
+       JOIN genres g ON bg.genre_id = g.id
+       WHERE rl.user_id=$1 AND rl.status='finished'
+       GROUP BY g.name ORDER BY count DESC LIMIT 5`,
+      [userId]
+    );
+
+    const pages = await pool.query(
+      `SELECT COALESCE(SUM(b.page_count),0) as total
+       FROM reading_list rl JOIN books b ON rl.book_id=b.id
+       WHERE rl.user_id=$1 AND rl.status='finished'`,
+      [userId]
+    );
+
+    res.json({
+      totalBooksRead: parseInt(total.rows[0].count),
+      booksPerMonth: monthly.rows,
+      topGenres: topGenres.rows,
+      totalPagesRead: parseInt(pages.rows[0].total),
+    });
+  } catch (error) {
+    console.error('Stats error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
@@ -53,8 +101,8 @@ app.use('/api/onboarding', onboardingRoutes);
 const readingListRoutes = require('./routes/readingList');
 app.use('/api/reading-list', readingListRoutes);
 
-
 const PORT = process.env.PORT || 3001;
+
 app.listen(PORT, () => {
   console.log(`Bookish backend running on http://localhost:${PORT}`);
 });
