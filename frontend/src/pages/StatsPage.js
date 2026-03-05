@@ -167,7 +167,7 @@ export default function StatsPage() {
               fontSize: '20px', fontWeight: '600',
               color: '#2c1a06', marginTop: 0, marginBottom: '24px',
             }}>Top Genres</h2>
-            <ResponsiveContainer width="100%" height={280}>
+            <ResponsiveContainer width="100%" height={400}>
               <PieChart>
                 <Pie
                   data={stats.topGenres}

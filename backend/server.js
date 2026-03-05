@@ -59,14 +59,14 @@ app.get('/api/stats', authenticate, async (req, res) => {
       [userId]
     );
     const topGenres = await pool.query(
-      `SELECT g.name, COUNT(*) as count
-       FROM reading_list rl
-       JOIN book_genres bg ON rl.book_id = bg.book_id
-       JOIN genres g ON bg.genre_id = g.id
-       WHERE rl.user_id=$1 AND rl.status='finished'
-       GROUP BY g.name ORDER BY count DESC LIMIT 5`,
-      [userId]
-    );
+  `SELECT g.name, COUNT(DISTINCT rl.book_id)::integer as count
+   FROM reading_list rl
+   JOIN book_genres bg ON rl.book_id = bg.book_id
+   JOIN genres g ON bg.genre_id = g.id
+   WHERE rl.user_id=$1 AND rl.status='finished'
+   GROUP BY g.id, g.name ORDER BY count DESC LIMIT 5`,
+  [userId]
+);
     const pages = await pool.query(
       `SELECT COALESCE(SUM(b.page_count),0) as total
        FROM reading_list rl JOIN books b ON rl.book_id=b.id
@@ -123,6 +123,9 @@ app.use('/api/onboarding', onboardingRoutes);
 
 const readingListRoutes = require('./routes/readingList');
 app.use('/api/reading-list', readingListRoutes);
+
+const recommendationRoutes = require('./routes/recommendations');
+app.use('/api/recommendations', recommendationRoutes);
 
 const PORT = process.env.PORT || 3001;
 
