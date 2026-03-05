@@ -48,7 +48,6 @@ app.get('/api/stats', authenticate, async (req, res) => {
       "SELECT COUNT(*) FROM reading_list WHERE user_id=$1 AND status='finished'",
       [userId]
     );
-
     const monthly = await pool.query(
       `SELECT TO_CHAR(finish_date, 'Mon') as month,
        EXTRACT(MONTH FROM finish_date)::integer as month_num,
@@ -59,7 +58,6 @@ app.get('/api/stats', authenticate, async (req, res) => {
        GROUP BY month, month_num ORDER BY month_num`,
       [userId]
     );
-
     const topGenres = await pool.query(
       `SELECT g.name, COUNT(*) as count
        FROM reading_list rl
@@ -69,14 +67,12 @@ app.get('/api/stats', authenticate, async (req, res) => {
        GROUP BY g.name ORDER BY count DESC LIMIT 5`,
       [userId]
     );
-
     const pages = await pool.query(
       `SELECT COALESCE(SUM(b.page_count),0) as total
        FROM reading_list rl JOIN books b ON rl.book_id=b.id
        WHERE rl.user_id=$1 AND rl.status='finished'`,
       [userId]
     );
-
     res.json({
       totalBooksRead: parseInt(total.rows[0].count),
       booksPerMonth: monthly.rows,
@@ -86,6 +82,33 @@ app.get('/api/stats', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Stats error:', error.message);
     res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+app.post('/api/synopsis', authenticate, async (req, res) => {
+  const { title, authors } = req.body;
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Write a short, engaging 3-sentence description of the book "${title}" by ${authors}. Write it in a literary, evocative style suited to a vintage book app. Do not use phrases like "this book" or "the author". Just describe the story and its themes directly. Return only the description, nothing else.`
+            }]
+          }]
+        })
+      }
+    );
+    const data = await response.json();
+    console.log('Gemini response:', JSON.stringify(data, null, 2));
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    res.json({ synopsis: text });
+  } catch (err) {
+    console.error('Synopsis error:', err);
+    res.status(500).json({ error: 'Failed to generate synopsis' });
   }
 });
 

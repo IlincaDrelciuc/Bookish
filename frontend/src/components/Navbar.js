@@ -14,9 +14,9 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      backgroundColor: '#0f0a06',
+      backgroundColor: '#2c1a06',
       borderBottom: '1px solid rgba(212,175,100,0.15)',
-      padding: '0 40px',
+      padding: '0 48px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -24,7 +24,7 @@ export default function Navbar() {
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      boxShadow: '0 2px 20px rgba(0,0,0,0.4)',
+      boxShadow: '0 2px 20px rgba(0,0,0,0.3)',
     }}>
 
       <Link to='/home' style={{
@@ -52,15 +52,15 @@ export default function Navbar() {
             letterSpacing: '0.04em',
             transition: 'color 0.2s',
           }}
-          onMouseEnter={e => e.target.style.color = '#f0e0c0'}
-          onMouseLeave={e => e.target.style.color = 'rgba(232,213,176,0.6)'}
+            onMouseEnter={e => e.target.style.color = '#f0e0c0'}
+            onMouseLeave={e => e.target.style.color = 'rgba(232,213,176,0.6)'}
           >
             {label}
           </Link>
         ))}
 
         <span style={{
-          color: 'rgba(212,175,100,0.5)',
+          color: 'rgba(212,175,100,0.6)',
           fontFamily: "'Lora', Georgia, serif",
           fontSize: '13px',
           fontStyle: 'italic',
@@ -80,14 +80,14 @@ export default function Navbar() {
           letterSpacing: '0.06em',
           transition: 'all 0.2s',
         }}
-        onMouseEnter={e => {
-          e.target.style.borderColor = 'rgba(212,175,100,0.5)';
-          e.target.style.color = '#f0e0c0';
-        }}
-        onMouseLeave={e => {
-          e.target.style.borderColor = 'rgba(212,175,100,0.25)';
-          e.target.style.color = 'rgba(232,213,176,0.5)';
-        }}
+          onMouseEnter={e => {
+            e.target.style.borderColor = 'rgba(212,175,100,0.5)';
+            e.target.style.color = '#f0e0c0';
+          }}
+          onMouseLeave={e => {
+            e.target.style.borderColor = 'rgba(212,175,100,0.25)';
+            e.target.style.color = 'rgba(232,213,176,0.5)';
+          }}
         >
           Log out
         </button>

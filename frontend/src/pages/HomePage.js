@@ -36,7 +36,7 @@ export default function HomePage() {
         fontFamily: "'Playfair Display', Georgia, serif",
         fontSize: '22px',
         fontWeight: '600',
-        color: '#f0e0c0',
+        color: '#2c1a06',
         margin: 0,
         marginBottom: '4px',
       }}>{title}</h2>
@@ -44,7 +44,7 @@ export default function HomePage() {
         <p style={{
           fontFamily: "'Lora', Georgia, serif",
           fontSize: '13px',
-          color: 'rgba(232,213,176,0.5)',
+          color: '#a07840',
           fontStyle: 'italic',
           margin: 0,
         }}>{subtitle}</p>
@@ -55,11 +55,7 @@ export default function HomePage() {
   const BookCard = ({ book }) => (
     <div
       onClick={() => navigate(`/books/${book.id}`)}
-      style={{
-        cursor: 'pointer',
-        flexShrink: 0,
-        width: '130px',
-      }}
+      style={{ cursor: 'pointer', flexShrink: 0, width: '130px' }}
     >
       <div style={{
         width: '130px',
@@ -67,8 +63,8 @@ export default function HomePage() {
         borderRadius: '3px',
         overflow: 'hidden',
         marginBottom: '10px',
-        border: '1px solid rgba(212,175,100,0.15)',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+        border: '1px solid rgba(139,101,48,0.2)',
+        boxShadow: '0 4px 16px rgba(139,101,48,0.12)',
       }}>
         {book.cover_image_url ? (
           <img
@@ -77,13 +73,13 @@ export default function HomePage() {
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={e => {
               e.target.style.display = 'none';
-              e.target.parentNode.style.background = 'rgba(212,175,100,0.1)';
+              e.target.parentNode.style.background = 'rgba(139,101,48,0.08)';
             }}
           />
         ) : (
           <div style={{
             width: '100%', height: '100%',
-            background: 'rgba(212,175,100,0.1)',
+            background: 'rgba(139,101,48,0.08)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '32px',
           }}>📖</div>
@@ -92,7 +88,7 @@ export default function HomePage() {
       <p style={{
         fontFamily: "'Lora', Georgia, serif",
         fontSize: '12px',
-        color: '#f0e0c0',
+        color: '#2c1a06',
         margin: 0,
         marginBottom: '3px',
         lineHeight: 1.3,
@@ -104,7 +100,7 @@ export default function HomePage() {
       <p style={{
         fontFamily: "'Lora', Georgia, serif",
         fontSize: '11px',
-        color: 'rgba(232,213,176,0.45)',
+        color: '#a07840',
         fontStyle: 'italic',
         margin: 0,
       }}>
@@ -118,16 +114,22 @@ export default function HomePage() {
       onClick={() => navigate(`/books/${book.id}`)}
       style={{
         cursor: 'pointer',
-        background: 'rgba(255,245,220,0.04)',
-        border: '1px solid rgba(212,175,100,0.15)',
-        borderRadius: '4px',
+        background: 'rgba(255,250,240,0.7)',
+        border: '1px solid rgba(139,101,48,0.15)',
+        borderRadius: '3px',
         padding: '16px',
         display: 'flex',
         gap: '16px',
-        transition: 'border-color 0.2s',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
       }}
-      onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(212,175,100,0.35)'}
-      onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(212,175,100,0.15)'}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = 'rgba(139,101,48,0.35)';
+        e.currentTarget.style.boxShadow = '0 4px 16px rgba(139,101,48,0.08)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = 'rgba(139,101,48,0.15)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
     >
       <div style={{
         flexShrink: 0,
@@ -135,21 +137,21 @@ export default function HomePage() {
         height: '88px',
         borderRadius: '2px',
         overflow: 'hidden',
-        border: '1px solid rgba(212,175,100,0.15)',
+        border: '1px solid rgba(139,101,48,0.2)',
       }}>
         {book.cover_image_url ? (
           <img src={book.cover_image_url} alt={book.title}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={e => { e.target.style.display = 'none'; }} />
         ) : (
-          <div style={{ width: '100%', height: '100%', background: 'rgba(212,175,100,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📖</div>
+          <div style={{ width: '100%', height: '100%', background: 'rgba(139,101,48,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>📖</div>
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: '15px',
-          color: '#f0e0c0',
+          color: '#2c1a06',
           margin: 0,
           marginBottom: '4px',
           fontWeight: '600',
@@ -157,7 +159,7 @@ export default function HomePage() {
         <p style={{
           fontFamily: "'Lora', Georgia, serif",
           fontSize: '12px',
-          color: 'rgba(232,213,176,0.5)',
+          color: '#a07840',
           fontStyle: 'italic',
           margin: 0,
           marginBottom: '8px',
@@ -166,7 +168,7 @@ export default function HomePage() {
           <p style={{
             fontFamily: "'Lora', Georgia, serif",
             fontSize: '12px',
-            color: 'rgba(232,213,176,0.65)',
+            color: '#6b4c1a',
             margin: 0,
             lineHeight: 1.5,
           }}>{book.explanation}</p>
@@ -178,7 +180,7 @@ export default function HomePage() {
   const shimmer = (w, h) => (
     <div style={{
       width: w, height: h,
-      background: 'rgba(212,175,100,0.06)',
+      background: 'rgba(139,101,48,0.08)',
       borderRadius: '3px',
       flexShrink: 0,
     }} />
@@ -187,21 +189,20 @@ export default function HomePage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f0a06 0%, #1a1008 40%, #0d0b08 100%)',
+      background: 'linear-gradient(160deg, #f5ead6 0%, #ede0c4 50%, #e8d5b0 100%)',
       fontFamily: "'Lora', Georgia, serif",
       paddingBottom: '60px',
     }}>
 
       {/* Hero greeting */}
       <div style={{
-        borderBottom: '1px solid rgba(212,175,100,0.1)',
+        borderBottom: '1px solid rgba(139,101,48,0.15)',
         padding: '40px 48px 32px',
-        marginBottom: '8px',
       }}>
         <p style={{
           fontFamily: "'Lora', Georgia, serif",
           fontSize: '13px',
-          color: 'rgba(212,175,100,0.6)',
+          color: '#8b6530',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           margin: 0,
@@ -211,7 +212,7 @@ export default function HomePage() {
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: '36px',
           fontWeight: '700',
-          color: '#f0e0c0',
+          color: '#2c1a06',
           margin: 0,
         }}>{user?.username}</h1>
       </div>
@@ -224,7 +225,7 @@ export default function HomePage() {
             {sectionTitle('Currently Reading', 'Pick up where you left off')}
             <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
               {loadingReading
-                ? [1,2,3].map(i => shimmer(130, 190))
+                ? [1, 2, 3].map(i => <div key={i}>{shimmer(130, 190)}</div>)
                 : currentlyReading.map(book => <BookCard key={book.id} book={book} />)
               }
             </div>
@@ -236,10 +237,10 @@ export default function HomePage() {
           {sectionTitle('Recommended For You', 'Based on your reading taste')}
           <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '8px' }}>
             {loadingSql
-              ? [1,2,3,4,5].map(i => shimmer(130, 190))
+              ? [1, 2, 3, 4, 5].map(i => <div key={i}>{shimmer(130, 190)}</div>)
               : sqlRecs.length > 0
                 ? sqlRecs.map(book => <BookCard key={book.id} book={book} />)
-                : <p style={{ color: 'rgba(232,213,176,0.4)', fontStyle: 'italic', fontSize: '14px' }}>No recommendations yet. Add some books to your reading list.</p>
+                : <p style={{ color: '#a07840', fontStyle: 'italic', fontSize: '14px' }}>No recommendations yet. Add some books to your reading list.</p>
             }
           </div>
         </section>
@@ -249,14 +250,14 @@ export default function HomePage() {
           {sectionTitle('AI Picks', 'Curated by Gemini with explanations')}
           {loadingGemini ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[1,2,3].map(i => shimmer('100%', 100))}
+              {[1, 2, 3].map(i => <div key={i}>{shimmer('100%', 100)}</div>)}
             </div>
           ) : geminiRecs.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {geminiRecs.map(book => <GeminiCard key={book.id} book={book} />)}
             </div>
           ) : (
-            <p style={{ color: 'rgba(232,213,176,0.4)', fontStyle: 'italic', fontSize: '14px' }}>
+            <p style={{ color: '#a07840', fontStyle: 'italic', fontSize: '14px' }}>
               AI recommendations are loading or unavailable right now.
             </p>
           )}

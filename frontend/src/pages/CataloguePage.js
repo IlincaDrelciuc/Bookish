@@ -7,20 +7,16 @@ export default function CataloguePage() {
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-
-  // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('');
   const [minRating, setMinRating] = useState('');
   const [genres, setGenres] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Load genres for filter dropdown
   useEffect(() => {
     apiCall('GET', '/onboarding/genres').then(setGenres).catch(console.error);
   }, []);
 
-  // Load books when page changes (and no search active)
   useEffect(() => {
     if (isSearching) return;
     setLoading(true);
@@ -33,7 +29,6 @@ export default function CataloguePage() {
       .finally(() => setLoading(false));
   }, [currentPage, isSearching]);
 
-  // Handle search with debounce
   useEffect(() => {
     if (!searchQuery && !selectedGenre && !minRating) {
       setIsSearching(false);
@@ -54,73 +49,184 @@ export default function CataloguePage() {
     return () => clearTimeout(timer);
   }, [searchQuery, selectedGenre, minRating]);
 
-  return (
-    <div style={{maxWidth:'1200px',margin:'0 auto',padding:'24px',fontFamily:'Arial,sans-serif'}}>
-      <h1 style={{color:'#2563EB',marginBottom:'24px'}}>Browse Books</h1>
+  const inputStyle = {
+    padding: '10px 14px',
+    background: 'rgba(255,250,240,0.8)',
+    border: '1px solid rgba(139,101,48,0.25)',
+    borderRadius: '2px',
+    color: '#2c1a06',
+    fontFamily: "'Lora', Georgia, serif",
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s',
+  };
 
-      {/* Search and Filter Bar */}
-      <div style={{display:'flex',gap:'12px',marginBottom:'24px',flexWrap:'wrap'}}>
-        <input
-          type='text'
-          placeholder='Search by title or author...'
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          style={{flex:1,minWidth:'200px',padding:'10px 14px',border:'1px solid #D1D5DB',borderRadius:'8px',fontSize:'15px'}}
-        />
-        <select
-          value={selectedGenre}
-          onChange={e => setSelectedGenre(e.target.value)}
-          style={{padding:'10px 14px',border:'1px solid #D1D5DB',borderRadius:'8px',fontSize:'15px'}}
-        >
-          <option value=''>All Genres</option>
-          {genres.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
-        </select>
-        <select
-          value={minRating}
-          onChange={e => setMinRating(e.target.value)}
-          style={{padding:'10px 14px',border:'1px solid #D1D5DB',borderRadius:'8px',fontSize:'15px'}}
-        >
-          <option value=''>Any Rating</option>
-          <option value='3'>3+ Stars</option>
-          <option value='3.5'>3.5+ Stars</option>
-          <option value='4'>4+ Stars</option>
-          <option value='4.5'>4.5+ Stars</option>
-        </select>
-        {(searchQuery || selectedGenre || minRating) && (
-          <button onClick={() => { setSearchQuery(''); setSelectedGenre(''); setMinRating(''); setIsSearching(false); }}
-            style={{padding:'10px 14px',border:'1px solid #D1D5DB',borderRadius:'8px',backgroundColor:'white',cursor:'pointer'}}>
-            Clear filters
-          </button>
-        )}
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(160deg, #f5ead6 0%, #ede0c4 50%, #e8d5b0 100%)',
+      fontFamily: "'Lora', Georgia, serif",
+      paddingBottom: '60px',
+    }}>
+
+      {/* Header */}
+      <div style={{
+        borderBottom: '1px solid rgba(139,101,48,0.15)',
+        padding: '40px 48px 32px',
+      }}>
+        <p style={{
+          fontFamily: "'Lora', Georgia, serif",
+          fontSize: '13px',
+          color: '#8b6530',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          margin: 0,
+          marginBottom: '8px',
+        }}>Explore</p>
+        <h1 style={{
+          fontFamily: "'Playfair Display', Georgia, serif",
+          fontSize: '36px',
+          fontWeight: '700',
+          color: '#2c1a06',
+          margin: 0,
+        }}>Browse Books</h1>
       </div>
 
-      {/* Book Grid */}
-      {loading ? (
-        <div style={{textAlign:'center',padding:'60px',color:'#64748B'}}>Loading books...</div>
-      ) : (
-        <>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:'20px',marginBottom:'32px'}}>
-            {books.map(book => <BookCard key={book.id} book={book} />)}
-          </div>
+      <div style={{ padding: '32px 48px 0' }}>
 
-          {/* Pagination (only when not searching) */}
-          {!isSearching && pagination.totalPages > 1 && (
-            <div style={{display:'flex',justifyContent:'center',gap:'12px',alignItems:'center'}}>
-              <button
-                onClick={() => setCurrentPage(p => p - 1)}
-                disabled={!pagination.hasPrevPage}
-                style={{padding:'8px 16px',border:'1px solid #D1D5DB',borderRadius:'6px',cursor: pagination.hasPrevPage?'pointer':'not-allowed',backgroundColor:'white'}}
-              >← Previous</button>
-              <span style={{color:'#64748B'}}>Page {pagination.page} of {pagination.totalPages}</span>
-              <button
-                onClick={() => setCurrentPage(p => p + 1)}
-                disabled={!pagination.hasNextPage}
-                style={{padding:'8px 16px',border:'1px solid #D1D5DB',borderRadius:'6px',cursor: pagination.hasNextPage?'pointer':'not-allowed',backgroundColor:'white'}}
-              >Next →</button>
-            </div>
+        {/* Search and filter bar */}
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          marginBottom: '32px',
+          flexWrap: 'wrap',
+        }}>
+          <input
+            type="text"
+            placeholder="Search by title or author..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ ...inputStyle, flex: 1, minWidth: '200px' }}
+            onFocus={e => e.target.style.borderColor = 'rgba(139,101,48,0.5)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(139,101,48,0.25)'}
+          />
+          <select
+            value={selectedGenre}
+            onChange={e => setSelectedGenre(e.target.value)}
+            style={{ ...inputStyle, cursor: 'pointer' }}
+          >
+            <option value="">All Genres</option>
+            {genres.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
+          </select>
+          <select
+            value={minRating}
+            onChange={e => setMinRating(e.target.value)}
+            style={{ ...inputStyle, cursor: 'pointer' }}
+          >
+            <option value="">Any Rating</option>
+            <option value="3">3+ Stars</option>
+            <option value="3.5">3.5+ Stars</option>
+            <option value="4">4+ Stars</option>
+            <option value="4.5">4.5+ Stars</option>
+          </select>
+          {(searchQuery || selectedGenre || minRating) && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedGenre('');
+                setMinRating('');
+                setIsSearching(false);
+              }}
+              style={{
+                ...inputStyle,
+                cursor: 'pointer',
+                color: '#a07840',
+                background: 'transparent',
+              }}
+            >
+              Clear filters
+            </button>
           )}
-        </>
-      )}
+        </div>
+
+        {/* Book grid */}
+        {loading ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '60px',
+            fontFamily: "'Lora', Georgia, serif",
+            color: '#a07840',
+            fontStyle: 'italic',
+          }}>
+            Loading books...
+          </div>
+        ) : (
+          <>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+              gap: '20px',
+              marginBottom: '40px',
+            }}>
+              {books.map(book => <BookCard key={book.id} book={book} />)}
+            </div>
+
+            {/* Pagination */}
+            {!isSearching && pagination.totalPages > 1 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '16px',
+                paddingBottom: '20px',
+              }}>
+                <button
+                  onClick={() => setCurrentPage(p => p - 1)}
+                  disabled={!pagination.hasPrevPage}
+                  style={{
+                    padding: '9px 20px',
+                    background: 'transparent',
+                    border: '1px solid rgba(139,101,48,0.3)',
+                    borderRadius: '2px',
+                    color: pagination.hasPrevPage ? '#6b4c1a' : 'rgba(139,101,48,0.25)',
+                    fontFamily: "'Lora', Georgia, serif",
+                    fontSize: '13px',
+                    cursor: pagination.hasPrevPage ? 'pointer' : 'not-allowed',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  ← Previous
+                </button>
+                <span style={{
+                  fontFamily: "'Lora', Georgia, serif",
+                  fontSize: '13px',
+                  color: '#8b6530',
+                  fontStyle: 'italic',
+                }}>
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  disabled={!pagination.hasNextPage}
+                  style={{
+                    padding: '9px 20px',
+                    background: 'transparent',
+                    border: '1px solid rgba(139,101,48,0.3)',
+                    borderRadius: '2px',
+                    color: pagination.hasNextPage ? '#6b4c1a' : 'rgba(139,101,48,0.25)',
+                    fontFamily: "'Lora', Georgia, serif",
+                    fontSize: '13px',
+                    cursor: pagination.hasNextPage ? 'pointer' : 'not-allowed',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  Next →
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
