@@ -41,6 +41,7 @@ export default function Navbar() {
       <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
         {[
           { to: '/books', label: 'Browse' },
+          { to: '/recommendations', label: 'Recommendations' },
           { to: '/my-books', label: 'My Books' },
           { to: '/stats', label: 'Stats' },
         ].map(({ to, label }) => (
@@ -57,6 +58,7 @@ export default function Navbar() {
           >
             {label}
           </Link>
+          
         ))}
 
         <span style={{
