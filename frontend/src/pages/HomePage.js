@@ -256,42 +256,45 @@ export default function HomePage() {
           {!loadingBow && bookOfWeek && (
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '48px', maxWidth: '900px' }}>
 
-              {/* Floating cover */}
-              <div
-                onClick={() => navigate(`/books/${bookOfWeek.id}`)}
-                style={{
-                  flexShrink: 0,
-                  cursor: 'pointer',
-                  filter: 'drop-shadow(0 16px 40px rgba(0,0,0,0.7))',
-                  transition: 'transform 0.15s',
-                }}
-                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-6px)'}
-                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <div style={{
-                  width: '200px', height: '300px',
-                  borderRadius: '8px', overflow: 'hidden',
-                  border: '1px solid rgba(212,175,100,0.25)',
-                }}>
-                  {bookOfWeek.cover_image_url ? (
-                    <img
-                      src={bookOfWeek.cover_image_url}
-                      alt={bookOfWeek.title}
-                      style={{
-                        width: '100%', height: '100%', objectFit: 'cover',
-                        filter: 'sepia(45%) contrast(110%) brightness(85%) saturate(80%)',
-                      }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '100%', height: '100%',
-                      background: 'rgba(139,101,48,0.15)',
-                      display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', fontSize: '48px',
-                    }}>📖</div>
-                  )}
-                </div>
-              </div>
+             {/* Floating cover */}
+<div
+  onClick={() => navigate(`/books/${bookOfWeek.id}`)}
+  style={{
+    flexShrink: 0,
+    cursor: 'pointer',
+    filter: 'drop-shadow(0 16px 40px rgba(0,0,0,0.7))',
+    transition: 'transform 0.15s',
+    alignSelf: 'stretch',
+  }}
+  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-6px)'}
+  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+>
+  <div style={{
+    width: '200px',
+    height: '100%',
+    minHeight: '300px',
+    borderRadius: '8px', overflow: 'hidden',
+    border: '1px solid rgba(212,175,100,0.25)',
+  }}>
+    {bookOfWeek.cover_image_url ? (
+      <img
+        src={bookOfWeek.cover_image_url}
+        alt={bookOfWeek.title}
+        style={{
+          width: '100%', height: '100%', objectFit: 'cover',
+          filter: 'sepia(45%) contrast(110%) brightness(85%) saturate(80%)',
+        }}
+      />
+    ) : (
+      <div style={{
+        width: '100%', height: '100%',
+        background: 'rgba(139,101,48,0.15)',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'center', fontSize: '48px',
+      }}>📖</div>
+    )}
+  </div>
+</div>
 
               {/* Info card */}
               <div style={{
