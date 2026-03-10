@@ -115,6 +115,43 @@ router.get('/search', async (req, res) => {
   }
 });
 
+router.get('/cover-lookup', async (req, res) => {
+  const { title, author } = req.query;
+  try {
+    // Try 1: title + author
+    let url = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&limit=1`;
+    let response = await fetch(url);
+    let data = await response.json();
+    let book = data.docs?.[0];
+
+    // Try 2: title only
+    if (!book?.cover_i) {
+      url = `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&limit=1`;
+      response = await fetch(url);
+      data = await response.json();
+      book = data.docs?.[0];
+    }
+
+    // Try 3: q= combined search
+    if (!book?.cover_i) {
+      url = `https://openlibrary.org/search.json?q=${encodeURIComponent(title + ' ' + author)}&limit=1`;
+      response = await fetch(url);
+      data = await response.json();
+      book = data.docs?.[0];
+    }
+
+    if (!book?.cover_i) {
+      return res.json({ cover_image_url: null });
+    }
+
+    const cover = `https://covers.openlibrary.org/b/id/${book.cover_i}-L.jpg`;
+    res.json({ cover_image_url: cover });
+  } catch (err) {
+    console.error('Cover lookup error:', err.message);
+    res.json({ cover_image_url: null });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   const bookId = parseInt(req.params.id);
   if (isNaN(bookId)) return res.status(400).json({ error: 'Invalid book ID' });

@@ -34,9 +34,6 @@ async function getGenreIdsForUser(userId) {
   return [];
 }
 
-// ─────────────────────────────────────────────────────────
-// GET /api/recommendations/sql-v1
-// ─────────────────────────────────────────────────────────
 router.get('/sql-v1', authenticate, async (req, res) => {
   const userId = req.user.userId;
   try {
@@ -100,9 +97,6 @@ router.get('/sql-v1', authenticate, async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────
-// GET /api/recommendations/sql-v2
-// ─────────────────────────────────────────────────────────
 router.get('/sql-v2', authenticate, async (req, res) => {
   const userId = req.user.userId;
   try {
@@ -188,12 +182,26 @@ router.get('/sql-v2', authenticate, async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────
-// GET /api/recommendations/gemini
-// ─────────────────────────────────────────────────────────
 router.get('/gemini', authenticate, async (req, res) => {
   const userId = req.user.userId;
   try {
+    const cacheResult = await pool.query(
+      `SELECT recommendations, created_at FROM gemini_cache
+       WHERE user_id = $1
+       AND created_at > NOW() - INTERVAL '24 hours'`,
+      [userId]
+    );
+
+    if (cacheResult.rows.length > 0) {
+      console.log(`Returning cached Gemini recommendations for user ${userId}`);
+      return res.json({
+        recommendations: cacheResult.rows[0].recommendations,
+        algorithm: 'gemini',
+        cached: true,
+        note: 'AI-generated recommendations with personalised explanations',
+      });
+    }
+
     const historyResult = await pool.query(
       `SELECT b.title,
        array_agg(DISTINCT g.name) FILTER (WHERE g.name IS NOT NULL) AS genres
@@ -246,9 +254,9 @@ TASK:
 Recommend exactly 5 books this reader has NOT already read.
 
 REQUIREMENTS:
+- ONLY recommend very well-known, widely published books that would appear in any major book database
+- Prioritise bestsellers, award winners, and books with over 100,000 Goodreads ratings
 - Each recommendation must match at least one of the reader's favourite genres or reading history
-- Include at least one book published after 2010
-- Include at least one lesser-known book
 - Do NOT recommend any of these already-read books: ${alreadyReadTitles.slice(0, 10).join(', ')}
 - The reason must explain specifically why this book suits THIS reader's taste
 
@@ -276,13 +284,21 @@ Return ONLY a valid JSON array. No markdown, no backticks, no preamble, no expla
       console.error('Failed to parse Gemini JSON:', rawText);
       return res.status(500).json({
         error: 'Gemini returned unexpected format. Please try again.',
-        rawResponse: rawText,
       });
     }
+
+    await pool.query(
+      `INSERT INTO gemini_cache (user_id, recommendations, created_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (user_id) DO UPDATE
+       SET recommendations = $2, created_at = NOW()`,
+      [userId, JSON.stringify(recommendations)]
+    );
 
     res.json({
       recommendations,
       algorithm: 'gemini',
+      cached: false,
       responseTimeMs: elapsedMs,
       note: 'AI-generated recommendations with personalised explanations',
     });

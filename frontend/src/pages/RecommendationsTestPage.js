@@ -20,46 +20,54 @@ export default function RecommendationsTestPage() {
 
     apiCall('GET', '/recommendations/gemini', null, token)
       .then(async data => {
-        const enriched = await Promise.all(
-          data.recommendations.map(async (r, i) => {
+        console.log('Gemini raw response:', data.recommendations);
+        const results = await Promise.all(
+          data.recommendations.map(async (r) => {
             try {
               const searchResults = await apiCall(
                 'GET',
-                `/books/search?q=${encodeURIComponent(r.title)}&limit=5`,
+                `/books/search?query=${encodeURIComponent(r.title)}&limit=5`,
                 null,
                 token
               );
+              console.log(`Search for "${r.title}":`, searchResults?.map(b => b.title));
 
               const match = Array.isArray(searchResults)
-                ? searchResults.find(b =>
-                    b.title.toLowerCase().includes(r.title.toLowerCase()) ||
-                    r.title.toLowerCase().includes(b.title.toLowerCase())
-                  ) || null
+                ? searchResults.find(b => {
+                    const dbTitle = b.title.toLowerCase();
+                    const geminiTitle = r.title.toLowerCase();
+                    return (
+                      dbTitle.includes(geminiTitle) ||
+                      geminiTitle.includes(dbTitle) ||
+                      dbTitle.startsWith(geminiTitle) ||
+                      geminiTitle.split(':')[0].trim() === dbTitle.split(':')[0].trim()
+                    );
+                  }) || null
                 : null;
 
+              console.log(`Match for "${r.title}":`, match?.title, '| id:', match?.id);
+
+              if (!match?.id) return null;
+
               return {
-                id: match?.id || `gemini-${i}`,
+                id: match.id,
                 title: r.title,
                 authors: [r.author],
                 reason: r.reason,
-                cover_image_url: match?.cover_image_url || null,
-                average_rating: match?.average_rating || null,
+                cover_image_url: match.cover_image_url || null,
+                average_rating: match.average_rating || null,
               };
-            } catch {
-              return {
-                id: `gemini-${i}`,
-                title: r.title,
-                authors: [r.author],
-                reason: r.reason,
-                cover_image_url: null,
-                average_rating: null,
-              };
+            } catch (err) {
+              console.error('Error processing', r.title, err);
+              return null;
             }
           })
         );
-        setGeminiRecs(enriched);
+
+        console.log('Final enriched results:', results);
+        setGeminiRecs(results.filter(Boolean));
       })
-      .catch(err => setGeminiError(err.message))
+      .catch(err => setSqlError(err.message))
       .finally(() => setGeminiLoading(false));
   }, [token]);
 

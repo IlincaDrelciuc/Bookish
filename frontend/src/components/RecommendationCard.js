@@ -1,13 +1,35 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function RecommendationCard({ book, rank, reason }) {
   const navigate = useNavigate();
+  const [coverUrl, setCoverUrl] = useState(book.cover_image_url);
+
+  useEffect(() => {
+    if (!coverUrl && book.title) {
+      const author = (book.authors || [])[0] || '';
+      console.log('Fetching cover for:', book.title, '| author:', author);
+      fetch(`http://localhost:3001/api/books/cover-lookup?title=${encodeURIComponent(book.title)}&author=${encodeURIComponent(author)}`)
+        .then(res => res.json())
+        .then(data => {
+          console.log('Cover result for', book.title, ':', data);
+          if (data.cover_image_url) setCoverUrl(data.cover_image_url);
+        })
+        .catch(err => console.error('Cover fetch error:', err));
+    }
+  }, [book.title]);
+
+  const handleClick = () => {
+    if (book.id && typeof book.id === 'number') {
+      navigate(`/books/${book.id}`);
+    }
+  };
 
   return (
     <div
-      onClick={() => navigate(`/books/${book.id}`)}
+      onClick={handleClick}
       style={{
-        cursor: 'pointer',
+        cursor: book.id && typeof book.id === 'number' ? 'pointer' : 'default',
         backgroundColor: 'rgba(255,250,240,0.8)',
         borderRadius: '2px',
         overflow: 'hidden',
@@ -18,9 +40,11 @@ export default function RecommendationCard({ book, rank, reason }) {
         flexDirection: 'column',
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 8px 24px rgba(139,101,48,0.14)';
-        e.currentTarget.style.borderColor = 'rgba(139,101,48,0.35)';
+        if (book.id && typeof book.id === 'number') {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(139,101,48,0.14)';
+          e.currentTarget.style.borderColor = 'rgba(139,101,48,0.35)';
+        }
       }}
       onMouseLeave={e => {
         e.currentTarget.style.transform = 'translateY(0)';
@@ -28,18 +52,23 @@ export default function RecommendationCard({ book, rank, reason }) {
         e.currentTarget.style.borderColor = 'rgba(139,101,48,0.15)';
       }}
     >
-      {/* Cover with rank badge */}
       <div style={{ position: 'relative', height: '200px', backgroundColor: 'rgba(139,101,48,0.06)', overflow: 'hidden' }}>
-        {book.cover_image_url && (
+        {coverUrl ? (
           <img
-            src={book.cover_image_url}
+            src={coverUrl}
             alt={book.title}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             onError={e => {
               e.target.onerror = null;
-              e.target.src = `https://covers.openlibrary.org/b/id/${book.goodbooks_id}-M.jpg`;
+              e.target.style.display = 'none';
             }}
           />
+        ) : (
+          <div style={{
+            width: '100%', height: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '48px',
+          }}>📖</div>
         )}
         {rank && (
           <div style={{
@@ -58,7 +87,6 @@ export default function RecommendationCard({ book, rank, reason }) {
         )}
       </div>
 
-      {/* Info */}
       <div style={{ padding: '14px', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <h3 style={{
           margin: '0 0 4px 0',
@@ -79,13 +107,11 @@ export default function RecommendationCard({ book, rank, reason }) {
           {(book.authors || []).join(', ')}
         </p>
 
-        {/* Star rating */}
         {book.average_rating && (
           <div style={{
             fontFamily: "'Lora', Georgia, serif",
             fontSize: '12px', color: '#8b6914',
-            marginBottom: '6px',
-            letterSpacing: '1px',
+            marginBottom: '6px', letterSpacing: '1px',
           }}>
             {'★'.repeat(Math.round(book.average_rating))}
             {'☆'.repeat(5 - Math.round(book.average_rating))}
@@ -95,14 +121,11 @@ export default function RecommendationCard({ book, rank, reason }) {
           </div>
         )}
 
-        {/* Score badge (SQL) */}
         {book.total_score !== undefined && (
           <div style={{
             fontFamily: "'Lora', Georgia, serif",
-            fontSize: '11px',
-            color: '#6b4c1a',
-            marginBottom: '6px',
-            letterSpacing: '0.04em',
+            fontSize: '11px', color: '#6b4c1a',
+            marginBottom: '6px', letterSpacing: '0.04em',
           }}>
             Score: {book.total_score}
             {book.author_bonus > 0 && (
@@ -111,7 +134,6 @@ export default function RecommendationCard({ book, rank, reason }) {
           </div>
         )}
 
-        {/* Reason text (Gemini) */}
         {reason && (
           <p style={{
             margin: '8px 0 0 0',
