@@ -14,7 +14,7 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      backgroundColor: '#2c1a06',
+      backgroundColor: '#0f0902',
       borderBottom: '1px solid rgba(212,175,100,0.15)',
       padding: '0 48px',
       display: 'flex',
@@ -27,19 +27,34 @@ export default function Navbar() {
       boxShadow: '0 2px 20px rgba(0,0,0,0.3)',
     }}>
 
-      <Link to='/home' style={{
-        textDecoration: 'none',
-        fontFamily: "'Playfair Display', Georgia, serif",
-        fontSize: '22px',
-        fontWeight: '700',
-        color: '#f0e0c0',
-        letterSpacing: '0.03em',
-      }}>
-        Bookish
-      </Link>
+      {/* Left side: Bookish + welcome */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <span style={{
+          fontFamily: "'Playfair Display', Georgia, serif",
+          fontSize: '22px',
+          fontWeight: '700',
+          color: '#f0e0c0',
+          letterSpacing: '0.03em',
+          lineHeight: 1,
+        }}>
+          Bookish
+        </span>
+        <span style={{
+          fontFamily: "'Lora', Georgia, serif",
+          fontSize: '11px',
+          color: 'rgba(20, 82, 177, 0.55)',
+          fontStyle: 'italic',
+          letterSpacing: '0.03em',
+          lineHeight: 1,
+        }}>
+          
+        </span>
+      </div>
 
+      {/* Right side: nav links + logout */}
       <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
         {[
+          { to: '/home', label: 'Home' },
           { to: '/books', label: 'Browse' },
           { to: '/recommendations', label: 'Recommendations' },
           { to: '/my-books', label: 'My Books' },
@@ -58,17 +73,7 @@ export default function Navbar() {
           >
             {label}
           </Link>
-          
         ))}
-
-        <span style={{
-          color: 'rgba(212,175,100,0.6)',
-          fontFamily: "'Lora', Georgia, serif",
-          fontSize: '13px',
-          fontStyle: 'italic',
-        }}>
-          {user?.username}
-        </span>
 
         <button onClick={handleLogout} style={{
           padding: '7px 18px',
