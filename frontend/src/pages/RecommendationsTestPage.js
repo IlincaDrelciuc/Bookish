@@ -20,7 +20,6 @@ export default function RecommendationsTestPage() {
 
     apiCall('GET', '/recommendations/gemini', null, token)
       .then(async data => {
-        console.log('Gemini raw response:', data.recommendations);
         const results = await Promise.all(
           data.recommendations.map(async (r) => {
             try {
@@ -30,7 +29,6 @@ export default function RecommendationsTestPage() {
                 null,
                 token
               );
-              console.log(`Search for "${r.title}":`, searchResults?.map(b => b.title));
 
               const match = Array.isArray(searchResults)
                 ? searchResults.find(b => {
@@ -44,8 +42,6 @@ export default function RecommendationsTestPage() {
                     );
                   }) || null
                 : null;
-
-              console.log(`Match for "${r.title}":`, match?.title, '| id:', match?.id);
 
               if (!match?.id) return null;
 
@@ -64,7 +60,6 @@ export default function RecommendationsTestPage() {
           })
         );
 
-        console.log('Final enriched results:', results);
         setGeminiRecs(results.filter(Boolean));
       })
       .catch(err => setSqlError(err.message))
@@ -74,34 +69,52 @@ export default function RecommendationsTestPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(160deg, #f5ead6 0%, #ede0c4 50%, #e8d5b0 100%)',
+      backgroundImage: `url('/fundal_register.avif')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
       fontFamily: "'Lora', Georgia, serif",
       paddingBottom: '60px',
+      position: 'relative',
     }}>
 
       <div style={{
-        borderBottom: '1px solid rgba(139,101,48,0.15)',
-        padding: '40px 48px 32px',
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(8, 5, 2, 0.68)',
+        zIndex: 0,
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{
+        position: 'relative',
+        zIndex: 1,
+        borderBottom: '1px solid rgba(212,175,100,0.12)',
+        padding: '28px 48px 24px',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        background: 'rgba(20, 12, 4, 0.25)',
       }}>
         <p style={{
-          fontSize: '13px', color: '#8b6530',
+          fontSize: '13px', color: 'rgba(212,175,100,0.6)',
           letterSpacing: '0.1em', textTransform: 'uppercase',
           margin: 0, marginBottom: '8px',
         }}>Curated For You</p>
         <h1 style={{
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: '36px', fontWeight: '700',
-          color: '#2c1a06', margin: 0,
+          color: '#f0e0c0', margin: 0,
+          textShadow: '0 2px 12px rgba(0,0,0,0.5)',
         }}>Your Recommendations</h1>
         <p style={{
           margin: '10px 0 0',
           fontFamily: "'Lora', Georgia, serif",
-          fontSize: '14px', color: '#a07840',
+          fontSize: '14px', color: 'rgba(212,175,100,0.6)',
           fontStyle: 'italic',
         }}>Two approaches to finding your next favourite book.</p>
       </div>
 
-      <div style={{ padding: '40px 48px' }}>
+      <div style={{ position: 'relative', zIndex: 1, padding: '40px 48px' }}>
         <RecommendationRow
           title="Quick Picks"
           subtitle="Instant recommendations based on your reading history"

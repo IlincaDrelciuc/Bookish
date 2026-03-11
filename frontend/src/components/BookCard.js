@@ -15,7 +15,7 @@ export default function BookCard({ book }) {
         cursor: 'pointer',
         borderRadius: '8px',
         overflow: 'hidden',
-        backgroundColor: 'rgba(255,250,240,0.8)',
+        backgroundColor: 'rgba(136, 121, 94, 0.8)',
         border: '1px solid rgba(139,101,48,0.15)',
         boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
         transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
@@ -76,7 +76,7 @@ export default function BookCard({ book }) {
         <p style={{
           margin: '0 0 8px 0',
           fontFamily: "'Lora', Georgia, serif",
-          fontSize: '12px', color: '#3d2e1a',
+          fontSize: '12px', color: '#302415',
           fontStyle: 'italic',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>

@@ -251,7 +251,7 @@ ${historyText}
 Favourite genres: ${genresText}
 
 TASK:
-Recommend exactly 5 books this reader has NOT already read.
+Recommend exactly 8 books this reader has NOT already read.
 
 REQUIREMENTS:
 - ONLY recommend very well-known, widely published books that would appear in any major book database
