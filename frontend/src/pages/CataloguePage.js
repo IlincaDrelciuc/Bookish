@@ -64,20 +64,38 @@ export default function CataloguePage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(160deg, #f5ead6 0%, #ede0c4 50%, #e8d5b0 100%)',
+      backgroundImage: `url('/fundal_register.avif')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundAttachment: 'fixed',
       fontFamily: "'Lora', Georgia, serif",
       paddingBottom: '60px',
+      position: 'relative',
     }}>
+
+      {/* Dark overlay */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(8, 5, 2, 0.68)',
+        zIndex: 0,
+        pointerEvents: 'none',
+      }} />
 
       {/* Header */}
       <div style={{
-        borderBottom: '1px solid rgba(139,101,48,0.15)',
-        padding: '40px 48px 32px',
+        position: 'relative',
+        zIndex: 1,
+        borderBottom: '1px solid rgba(212,175,100,0.12)',
+        padding: '28px 48px 24px',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        background: 'rgba(20, 12, 4, 0.25)',
       }}>
         <p style={{
           fontFamily: "'Lora', Georgia, serif",
           fontSize: '13px',
-          color: '#8b6530',
+          color: 'rgba(212,175,100,0.6)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           margin: 0,
@@ -87,12 +105,12 @@ export default function CataloguePage() {
           fontFamily: "'Playfair Display', Georgia, serif",
           fontSize: '36px',
           fontWeight: '700',
-          color: '#2c1a06',
+          color: '#f0e0c0',
           margin: 0,
         }}>Browse Books</h1>
       </div>
 
-      <div style={{ padding: '32px 48px 0' }}>
+      <div style={{ position: 'relative', zIndex: 1, padding: '32px 48px 0' }}>
 
         {/* Search and filter bar */}
         <div style={{
@@ -106,14 +124,26 @@ export default function CataloguePage() {
             placeholder="Search by title or author..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            style={{ ...inputStyle, flex: 1, minWidth: '200px' }}
-            onFocus={e => e.target.style.borderColor = 'rgba(139,101,48,0.5)'}
-            onBlur={e => e.target.style.borderColor = 'rgba(139,101,48,0.25)'}
+            style={{
+              ...inputStyle,
+              flex: 1, minWidth: '200px',
+              background: 'rgba(20,12,4,0.5)',
+              border: '1px solid rgba(212,175,100,0.2)',
+              color: '#e8d5b0',
+            }}
+            onFocus={e => e.target.style.borderColor = 'rgba(212,175,100,0.5)'}
+            onBlur={e => e.target.style.borderColor = 'rgba(212,175,100,0.2)'}
           />
           <select
             value={selectedGenre}
             onChange={e => setSelectedGenre(e.target.value)}
-            style={{ ...inputStyle, cursor: 'pointer' }}
+            style={{
+              ...inputStyle,
+              cursor: 'pointer',
+              background: 'rgba(20,12,4,0.5)',
+              border: '1px solid rgba(212,175,100,0.2)',
+              color: '#e8d5b0',
+            }}
           >
             <option value="">All Genres</option>
             {genres.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
@@ -121,7 +151,13 @@ export default function CataloguePage() {
           <select
             value={minRating}
             onChange={e => setMinRating(e.target.value)}
-            style={{ ...inputStyle, cursor: 'pointer' }}
+            style={{
+              ...inputStyle,
+              cursor: 'pointer',
+              background: 'rgba(20,12,4,0.5)',
+              border: '1px solid rgba(212,175,100,0.2)',
+              color: '#e8d5b0',
+            }}
           >
             <option value="">Any Rating</option>
             <option value="3">3+ Stars</option>
@@ -140,8 +176,9 @@ export default function CataloguePage() {
               style={{
                 ...inputStyle,
                 cursor: 'pointer',
-                color: '#a07840',
                 background: 'transparent',
+                border: '1px solid rgba(212,175,100,0.2)',
+                color: 'rgba(212,175,100,0.7)',
               }}
             >
               Clear filters
@@ -155,7 +192,7 @@ export default function CataloguePage() {
             textAlign: 'center',
             padding: '60px',
             fontFamily: "'Lora', Georgia, serif",
-            color: '#a07840',
+            color: 'rgba(212,175,100,0.6)',
             fontStyle: 'italic',
           }}>
             Loading books...
@@ -186,9 +223,9 @@ export default function CataloguePage() {
                   style={{
                     padding: '9px 20px',
                     background: 'transparent',
-                    border: '1px solid rgba(139,101,48,0.3)',
+                    border: '1px solid rgba(212,175,100,0.25)',
                     borderRadius: '2px',
-                    color: pagination.hasPrevPage ? '#6b4c1a' : 'rgba(139,101,48,0.25)',
+                    color: pagination.hasPrevPage ? 'rgba(232,213,176,0.8)' : 'rgba(212,175,100,0.25)',
                     fontFamily: "'Lora', Georgia, serif",
                     fontSize: '13px',
                     cursor: pagination.hasPrevPage ? 'pointer' : 'not-allowed',
@@ -200,7 +237,7 @@ export default function CataloguePage() {
                 <span style={{
                   fontFamily: "'Lora', Georgia, serif",
                   fontSize: '13px',
-                  color: '#8b6530',
+                  color: 'rgba(212,175,100,0.6)',
                   fontStyle: 'italic',
                 }}>
                   Page {pagination.page} of {pagination.totalPages}
@@ -211,9 +248,9 @@ export default function CataloguePage() {
                   style={{
                     padding: '9px 20px',
                     background: 'transparent',
-                    border: '1px solid rgba(139,101,48,0.3)',
+                    border: '1px solid rgba(212,175,100,0.25)',
                     borderRadius: '2px',
-                    color: pagination.hasNextPage ? '#6b4c1a' : 'rgba(139,101,48,0.25)',
+                    color: pagination.hasNextPage ? 'rgba(232,213,176,0.8)' : 'rgba(212,175,100,0.25)',
                     fontFamily: "'Lora', Georgia, serif",
                     fontSize: '13px',
                     cursor: pagination.hasNextPage ? 'pointer' : 'not-allowed',

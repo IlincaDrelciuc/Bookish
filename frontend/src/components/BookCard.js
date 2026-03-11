@@ -76,7 +76,7 @@ export default function BookCard({ book }) {
         <p style={{
           margin: '0 0 8px 0',
           fontFamily: "'Lora', Georgia, serif",
-          fontSize: '12px', color: '#a07840',
+          fontSize: '12px', color: '#3d2e1a',
           fontStyle: 'italic',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
@@ -84,12 +84,12 @@ export default function BookCard({ book }) {
         </p>
         {book.average_rating && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ color: '#8b6914', fontSize: '12px' }}>
+            <span style={{ color: '#b6970c', fontSize: '12px' }}>
               {renderStars(book.average_rating)}
             </span>
             <span style={{
               fontFamily: "'Lora', Georgia, serif",
-              fontSize: '11px', color: '#a07840',
+              fontSize: '11px', color: '#3d2e1a',
             }}>
               {parseFloat(book.average_rating).toFixed(1)}
             </span>
