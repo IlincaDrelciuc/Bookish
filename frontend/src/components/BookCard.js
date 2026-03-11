@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import DefaultBookCover from './DefaultBookCover';
 
 export default function BookCard({ book }) {
   const navigate = useNavigate();
@@ -7,6 +8,11 @@ export default function BookCard({ book }) {
     const filled = Math.round(rating);
     return '★'.repeat(filled) + '☆'.repeat(5 - filled);
   }
+
+  const hasGoodCover = book.cover_image_url && (
+    book.cover_image_url.includes('books.google') ||
+    book.cover_image_url.includes('openlibrary')
+  );
 
   return (
     <div
@@ -31,14 +37,12 @@ export default function BookCard({ book }) {
         e.currentTarget.style.borderColor = 'rgba(139,101,48,0.15)';
       }}
     >
-      {/* Cover */}
       <div style={{
         height: '200px',
-        backgroundColor: 'rgba(139,101,48,0.06)',
         overflow: 'hidden',
         borderRadius: '8px 8px 0 0',
       }}>
-        {book.cover_image_url ? (
+        {hasGoodCover ? (
           <img
             src={book.cover_image_url}
             alt={book.title}
@@ -49,20 +53,17 @@ export default function BookCard({ book }) {
             }}
             onMouseEnter={e => e.target.style.transform = 'scale(1.04)'}
             onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-            onError={e => {
-              e.target.onerror = null;
-              e.target.src = `https://covers.openlibrary.org/b/id/${book.goodbooks_id}-M.jpg`;
-            }}
           />
         ) : (
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            height: '100%', fontSize: '48px',
-          }}>📖</div>
+          <DefaultBookCover
+            title={book.title}
+            author={(book.authors || []).join(', ')}
+            width="100%"
+            height="100%"
+          />
         )}
       </div>
 
-      {/* Info */}
       <div style={{ padding: '12px 14px' }}>
         <h3 style={{
           margin: '0 0 4px 0',

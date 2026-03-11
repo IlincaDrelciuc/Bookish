@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import DefaultBookCover from './DefaultBookCover';
 
 export default function RecommendationCard({ book, rank, reason, geminiMode }) {
   const navigate = useNavigate();
@@ -16,9 +17,7 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
   }, [book.title]);
 
   const handleClick = () => {
-    if (book.id && typeof book.id === 'number') {
-      navigate(`/books/${book.id}`);
-    }
+    if (book.id && typeof book.id === 'number') navigate(`/books/${book.id}`);
   };
 
   function renderStars(rating) {
@@ -26,8 +25,31 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
     return '★'.repeat(filled) + '☆'.repeat(5 - filled);
   }
 
+  const hasGoodCover = coverUrl && (
+    coverUrl.includes('books.google') ||
+    coverUrl.includes('openlibrary')
+  );
+
+  const coverSlot = (height = '100%', width = '100%') => hasGoodCover ? (
+    <img
+      src={coverUrl}
+      alt={book.title}
+      style={{
+        width: '100%', height: '100%', objectFit: 'cover',
+        filter: 'sepia(20%) contrast(105%) brightness(95%)',
+        transition: 'transform 0.2s',
+      }}
+    />
+  ) : (
+    <DefaultBookCover
+      title={book.title}
+      author={(book.authors || []).join(', ')}
+      width={width}
+      height={height}
+    />
+  );
+
   if (geminiMode) {
-    // Horizontal cover + details layout for AI recommendations
     return (
       <div
         onClick={handleClick}
@@ -55,88 +77,43 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
           e.currentTarget.style.borderColor = 'rgba(139,101,48,0.15)';
         }}
       >
-        {/* Cover */}
         <div style={{
-          position: 'relative',
-          width: '100px',
-          flexShrink: 0,
-          backgroundColor: 'rgba(139,101,48,0.06)',
-          overflow: 'hidden',
-          borderRadius: '8px 0 0 8px',
+          position: 'relative', width: '100px', flexShrink: 0,
+          overflow: 'hidden', borderRadius: '8px 0 0 8px',
         }}>
-          {coverUrl ? (
-            <img
-              src={coverUrl}
-              alt={book.title}
-              style={{
-                width: '100%', height: '100%', objectFit: 'cover',
-                filter: 'sepia(20%) contrast(105%) brightness(95%)',
-              }}
-              onError={e => {
-                e.target.onerror = null;
-                e.target.style.display = 'none';
-              }}
-            />
-          ) : (
-            <div style={{
-              width: '100%', height: '100%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '36px',
-            }}>📖</div>
-          )}
+          {coverSlot('100%', '100px')}
           {rank && (
             <div style={{
               position: 'absolute', top: '8px', left: '8px',
               background: 'linear-gradient(135deg, #433f36 0%, #373122 100%)',
-              color: '#fff8ee',
-              borderRadius: '50%',
+              color: '#fff8ee', borderRadius: '50%',
               width: '24px', height: '24px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: "'Playfair Display', Georgia, serif",
               fontSize: '12px', fontWeight: '700',
               boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-            }}>
-              {rank}
-            </div>
+            }}>{rank}</div>
           )}
         </div>
 
-        {/* Info */}
-        <div style={{
-          padding: '16px 18px',
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-        }}>
+        <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <h3 style={{
             margin: '0 0 4px 0',
             fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: '14px', fontWeight: '600',
-            color: '#2c1a06',
+            fontSize: '14px', fontWeight: '600', color: '#2c1a06',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {book.title}
-          </h3>
+          }}>{book.title}</h3>
           <p style={{
             margin: '0 0 8px 0',
             fontFamily: "'Lora', Georgia, serif",
-            fontSize: '12px', color: '#302415',
-            fontStyle: 'italic',
+            fontSize: '12px', color: '#302415', fontStyle: 'italic',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {(book.authors || []).join(', ') || 'Unknown Author'}
-          </p>
+          }}>{(book.authors || []).join(', ') || 'Unknown Author'}</p>
 
           {book.average_rating && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
-              <span style={{ color: '#b6970c', fontSize: '12px' }}>
-                {renderStars(book.average_rating)}
-              </span>
-              <span style={{
-                fontFamily: "'Lora', Georgia, serif",
-                fontSize: '11px', color: '#3d2e1a',
-              }}>
+              <span style={{ color: '#b6970c', fontSize: '12px' }}>{renderStars(book.average_rating)}</span>
+              <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: '11px', color: '#3d2e1a' }}>
                 {parseFloat(book.average_rating).toFixed(1)}
               </span>
             </div>
@@ -150,30 +127,25 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
               lineHeight: '1.6', fontStyle: 'italic',
               borderTop: '1px solid rgba(139,101,48,0.2)',
               paddingTop: '8px',
-            }}>
-              {reason}
-            </p>
+            }}>{reason}</p>
           )}
         </div>
       </div>
     );
   }
 
-  // Original vertical card layout for SQL recommendations
   return (
     <div
       onClick={handleClick}
       style={{
         width: '100%',
         cursor: book.id && typeof book.id === 'number' ? 'pointer' : 'default',
-        borderRadius: '8px',
-        overflow: 'hidden',
+        borderRadius: '8px', overflow: 'hidden',
         backgroundColor: 'rgba(172, 158, 133, 0.8)',
         border: '1px solid rgba(139,101,48,0.15)',
         boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
         transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
-        display: 'flex',
-        flexDirection: 'column',
+        display: 'flex', flexDirection: 'column',
       }}
       onMouseEnter={e => {
         if (book.id && typeof book.id === 'number') {
@@ -188,95 +160,50 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
         e.currentTarget.style.borderColor = 'rgba(139,101,48,0.15)';
       }}
     >
-      {/* Cover */}
       <div style={{
-        position: 'relative',
-        height: '200px',
-        backgroundColor: 'rgba(139,101,48,0.06)',
-        overflow: 'hidden',
-        borderRadius: '8px 8px 0 0',
+        position: 'relative', height: '200px',
+        overflow: 'hidden', borderRadius: '8px 8px 0 0',
       }}>
-        {coverUrl ? (
-          <img
-            src={coverUrl}
-            alt={book.title}
-            style={{
-              width: '100%', height: '100%', objectFit: 'cover',
-              filter: 'sepia(20%) contrast(105%) brightness(95%)',
-              transition: 'transform 0.2s',
-            }}
-            onMouseEnter={e => e.target.style.transform = 'scale(1.04)'}
-            onMouseLeave={e => e.target.style.transform = 'scale(1)'}
-            onError={e => {
-              e.target.onerror = null;
-              e.target.style.display = 'none';
-            }}
-          />
-        ) : (
-          <div style={{
-            width: '100%', height: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '48px',
-          }}>📖</div>
-        )}
+        {coverSlot('200px', '100%')}
         {rank && (
           <div style={{
             position: 'absolute', top: '8px', left: '8px',
             background: 'linear-gradient(135deg, #433f36 0%, #373122 100%)',
-            color: '#fff8ee',
-            borderRadius: '50%',
+            color: '#fff8ee', borderRadius: '50%',
             width: '28px', height: '28px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontFamily: "'Playfair Display', Georgia, serif",
             fontSize: '13px', fontWeight: '700',
             boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
-          }}>
-            {rank}
-          </div>
+          }}>{rank}</div>
         )}
       </div>
 
-      {/* Info */}
       <div style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column' }}>
         <h3 style={{
           margin: '0 0 4px 0',
           fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: '13px', fontWeight: '600',
-          color: '#2c1a06',
+          fontSize: '13px', fontWeight: '600', color: '#2c1a06',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {book.title}
-        </h3>
+        }}>{book.title}</h3>
         <p style={{
           margin: '0 0 8px 0',
           fontFamily: "'Lora', Georgia, serif",
-          fontSize: '12px', color: '#302415',
-          fontStyle: 'italic',
+          fontSize: '12px', color: '#302415', fontStyle: 'italic',
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
-          {(book.authors || []).join(', ') || 'Unknown Author'}
-        </p>
+        }}>{(book.authors || []).join(', ') || 'Unknown Author'}</p>
 
         {book.average_rating && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '6px' }}>
-            <span style={{ color: '#b6970c', fontSize: '12px' }}>
-              {renderStars(book.average_rating)}
-            </span>
-            <span style={{
-              fontFamily: "'Lora', Georgia, serif",
-              fontSize: '11px', color: '#3d2e1a',
-            }}>
+            <span style={{ color: '#b6970c', fontSize: '12px' }}>{renderStars(book.average_rating)}</span>
+            <span style={{ fontFamily: "'Lora', Georgia, serif", fontSize: '11px', color: '#3d2e1a' }}>
               {parseFloat(book.average_rating).toFixed(1)}
             </span>
           </div>
         )}
 
         {book.total_score !== undefined && (
-          <div style={{
-            fontFamily: "'Lora', Georgia, serif",
-            fontSize: '11px', color: '#3d2e1a',
-            marginBottom: '6px',
-          }}>
+          <div style={{ fontFamily: "'Lora', Georgia, serif", fontSize: '11px', color: '#3d2e1a', marginBottom: '6px' }}>
             Score: {book.total_score}
             {book.author_bonus > 0 && (
               <span style={{ color: '#8b6914', marginLeft: '4px' }}>· author match ✓</span>

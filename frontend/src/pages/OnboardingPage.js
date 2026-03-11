@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiCall } from '../utils/api';
 
-const BG_IMAGE = 'https://images.unsplash.com/photo-1507842217343-583bb7270b66';
+const BG_IMAGE = '/foto-register.webp';
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
@@ -63,11 +63,11 @@ export default function OnboardingPage() {
   }
 
   const chipStyle = (selected) => ({
-    padding: '9px 20px',
-    borderRadius: '2px',
-    border: `1px solid ${selected ? '#8b6914' : 'rgba(100,70,20,0.25)'}`,
-    backgroundColor: selected ? 'rgba(139,105,20,0.15)' : 'rgba(255,250,240,0.6)',
-    color: selected ? '#5c3d0a' : '#6b4c1a',
+    padding: '8px 18px',
+    borderRadius: '20px',
+    border: `1px solid ${selected ? 'rgba(212,175,100,0.6)' : 'rgba(212,175,100,0.2)'}`,
+    backgroundColor: selected ? 'rgba(212,175,100,0.18)' : 'rgba(255,245,220,0.06)',
+    color: selected ? '#f0e0c0' : 'rgba(232,213,176,0.6)',
     fontFamily: "'Lora', Georgia, serif",
     fontSize: '13px',
     fontWeight: selected ? '600' : '400',
@@ -79,14 +79,18 @@ export default function OnboardingPage() {
   if (error) return (
     <div style={{
       minHeight: '100vh',
-      background: '#0f0a06',
+      backgroundImage: `url(${BG_IMAGE})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       color: '#e09090',
       fontFamily: "'Lora', Georgia, serif",
+      position: 'relative',
     }}>
-      Error: {error}
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,6,2,0.6)', zIndex: 0 }} />
+      <span style={{ position: 'relative', zIndex: 1 }}>Error: {error}</span>
     </div>
   );
 
@@ -97,6 +101,7 @@ export default function OnboardingPage() {
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       padding: '40px 20px',
@@ -104,64 +109,68 @@ export default function OnboardingPage() {
       position: 'relative',
     }}>
 
-      {/* Dark overlay over photo */}
       <div style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(10,6,2,0.55)',
+        background: 'rgba(10,6,2,0.6)',
         zIndex: 0,
       }} />
 
+      {/* App name above card */}
+      <span style={{
+        position: 'relative',
+        zIndex: 1,
+        fontFamily: "'Playfair Display', Georgia, serif",
+        fontSize: '48px',
+        fontWeight: '700',
+        color: '#f0e0c0',
+        letterSpacing: '0.04em',
+        marginBottom: '8px',
+        textShadow: '0 2px 12px rgba(0,0,0,0.5)',
+      }}>Bookish</span>
+      <span style={{
+        position: 'relative',
+        zIndex: 1,
+        fontFamily: "'Lora', Georgia, serif",
+        fontSize: '14px',
+        color: 'rgba(240,224,192,0.6)',
+        fontStyle: 'italic',
+        marginBottom: '32px',
+        letterSpacing: '0.06em',
+      }}>Let's personalise your reading experience</span>
+
+      {/* Card */}
       <div style={{
         position: 'relative',
         zIndex: 1,
-        maxWidth: '640px',
+        maxWidth: '620px',
         width: '100%',
-        background: 'rgba(255,248,230,0.97)',
-        border: '1px solid rgba(180,140,60,0.3)',
+        background: 'rgba(20,12,4,0.55)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        border: '1px solid rgba(212,175,100,0.2)',
         borderRadius: '4px',
-        padding: '56px 52px',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+        padding: '52px 56px',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(212,175,100,0.08)',
       }}>
 
-        <div style={{ marginBottom: '40px' }}>
-          <span style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: '26px',
-            fontWeight: '700',
-            color: '#2c1a06',
-            letterSpacing: '0.02em',
-            display: 'block',
-            marginBottom: '6px',
-          }}>
-            Bookish
-          </span>
-          <p style={{
-            color: '#8b6530',
-            fontSize: '13px',
-            fontStyle: 'italic',
-            marginBottom: '28px',
-          }}>
-            Let's personalise your reading experience
-          </p>
-
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {[1, 2].map(s => (
-              <div key={s} style={{
-                height: '2px',
-                flex: 1,
-                borderRadius: '1px',
-                backgroundColor: step >= s ? '#8b6914' : 'rgba(139,105,20,0.2)',
-                transition: 'background-color 0.3s',
-              }} />
-            ))}
-          </div>
+        {/* Progress bar */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '40px' }}>
+          {[1, 2].map(s => (
+            <div key={s} style={{
+              height: '2px',
+              flex: 1,
+              borderRadius: '1px',
+              backgroundColor: step >= s ? '#d4af37' : 'rgba(212,175,100,0.15)',
+              transition: 'background-color 0.3s',
+            }} />
+          ))}
         </div>
 
         {step === 1 && (
           <div>
             <span style={{
-              color: '#8b6530',
+              color: 'rgba(212,175,100,0.5)',
               fontSize: '11px',
               letterSpacing: '0.15em',
               textTransform: 'uppercase',
@@ -174,14 +183,15 @@ export default function OnboardingPage() {
               fontFamily: "'Playfair Display', Georgia, serif",
               fontSize: '24px',
               fontWeight: '600',
-              color: '#2c1a06',
+              color: '#f0e0c0',
               marginBottom: '8px',
               marginTop: 0,
+              textShadow: '0 1px 8px rgba(0,0,0,0.4)',
             }}>
               What genres do you love?
             </h2>
             <p style={{
-              color: '#8b6530',
+              color: 'rgba(212,175,100,0.6)',
               fontSize: '13px',
               fontStyle: 'italic',
               marginBottom: '28px',
@@ -208,11 +218,11 @@ export default function OnboardingPage() {
                 width: '100%',
                 padding: '13px',
                 background: selectedGenreIds.length >= 3
-                  ? 'linear-gradient(135deg, #8b6914 0%, #6b4f10 100%)'
-                  : 'rgba(139,105,20,0.1)',
-                border: '1px solid rgba(139,105,20,0.3)',
+                  ? 'linear-gradient(135deg, #7a4f0d 0%, #4e3008 100%)'
+                  : 'rgba(212,175,100,0.08)',
+                border: '1px solid rgba(212,175,100,0.25)',
                 borderRadius: '2px',
-                color: selectedGenreIds.length >= 3 ? '#fff8ee' : 'rgba(100,70,20,0.3)',
+                color: selectedGenreIds.length >= 3 ? '#fff8ee' : 'rgba(212,175,100,0.25)',
                 fontFamily: "'Playfair Display', Georgia, serif",
                 fontSize: '13px',
                 fontWeight: '600',
@@ -230,7 +240,7 @@ export default function OnboardingPage() {
         {step === 2 && (
           <div>
             <span style={{
-              color: '#8b6530',
+              color: 'rgba(212,175,100,0.5)',
               fontSize: '11px',
               letterSpacing: '0.15em',
               textTransform: 'uppercase',
@@ -243,14 +253,15 @@ export default function OnboardingPage() {
               fontFamily: "'Playfair Display', Georgia, serif",
               fontSize: '24px',
               fontWeight: '600',
-              color: '#2c1a06',
+              color: '#f0e0c0',
               marginBottom: '8px',
               marginTop: 0,
+              textShadow: '0 1px 8px rgba(0,0,0,0.4)',
             }}>
               Books you've already read
             </h2>
             <p style={{
-              color: '#8b6530',
+              color: 'rgba(212,175,100,0.6)',
               fontSize: '13px',
               fontStyle: 'italic',
               marginBottom: '24px',
@@ -266,10 +277,10 @@ export default function OnboardingPage() {
               style={{
                 width: '100%',
                 padding: '12px 16px',
-                background: 'rgba(255,250,240,0.8)',
-                border: '1px solid rgba(139,105,20,0.3)',
+                background: 'rgba(255,245,220,0.06)',
+                border: '1px solid rgba(212,175,100,0.2)',
                 borderRadius: '2px',
-                color: '#2c1a06',
+                color: '#e8d5b0',
                 fontSize: '14px',
                 fontFamily: "'Lora', Georgia, serif",
                 marginBottom: '16px',
@@ -285,30 +296,34 @@ export default function OnboardingPage() {
                   display: 'flex',
                   gap: '12px',
                   padding: '12px',
-                  border: `1px solid ${selected ? '#8b6914' : 'rgba(139,105,20,0.2)'}`,
-                  borderRadius: '2px',
+                  border: `1px solid ${selected ? 'rgba(212,175,100,0.5)' : 'rgba(212,175,100,0.15)'}`,
+                  borderRadius: '4px',
                   marginBottom: '8px',
                   cursor: 'pointer',
-                  backgroundColor: selected ? 'rgba(139,105,20,0.1)' : 'rgba(255,250,240,0.6)',
+                  backgroundColor: selected ? 'rgba(212,175,100,0.12)' : 'rgba(255,245,220,0.04)',
                   transition: 'all 0.15s',
                 }}>
                   <img
                     src={book.cover_image_url}
                     alt={book.title}
-                    style={{ width: '36px', height: '54px', objectFit: 'cover', borderRadius: '1px' }}
+                    style={{
+                      width: '36px', height: '54px',
+                      objectFit: 'cover', borderRadius: '2px',
+                      filter: 'sepia(10%) contrast(105%) brightness(95%)',
+                    }}
                     onError={e => { e.target.style.display = 'none'; }}
                   />
                   <div style={{ flex: 1 }}>
                     <div style={{
                       fontFamily: "'Lora', Georgia, serif",
                       fontSize: '14px',
-                      color: '#2c1a06',
+                      color: '#e8d5b0',
                       marginBottom: '3px',
                     }}>
                       {book.title}
                     </div>
                     <div style={{
-                      color: '#8b6530',
+                      color: 'rgba(212,175,100,0.6)',
                       fontSize: '12px',
                       fontStyle: 'italic',
                     }}>
@@ -316,19 +331,19 @@ export default function OnboardingPage() {
                     </div>
                   </div>
                   {selected && (
-                    <span style={{ color: '#8b6914', fontSize: '16px', alignSelf: 'center' }}>✓</span>
+                    <span style={{ color: '#d4af37', fontSize: '16px', alignSelf: 'center' }}>✓</span>
                   )}
                 </div>
               );
             })}
 
             {selectedBooks.length > 0 && (
-              <div style={{ marginBottom: '20px', marginTop: '8px' }}>
+              <div style={{ marginBottom: '20px', marginTop: '16px' }}>
                 <span style={{
                   fontSize: '11px',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  color: '#8b6530',
+                  color: 'rgba(212,175,100,0.5)',
                   display: 'block',
                   marginBottom: '10px',
                 }}>
@@ -348,13 +363,14 @@ export default function OnboardingPage() {
                 style={{
                   padding: '13px 24px',
                   background: 'transparent',
-                  border: '1px solid rgba(139,105,20,0.3)',
+                  border: '1px solid rgba(212,175,100,0.2)',
                   borderRadius: '2px',
-                  color: '#8b6530',
+                  color: 'rgba(232,213,176,0.6)',
                   fontFamily: "'Lora', Georgia, serif",
                   fontSize: '13px',
                   cursor: 'pointer',
                   letterSpacing: '0.04em',
+                  transition: 'all 0.15s',
                 }}
               >
                 Back
@@ -365,8 +381,8 @@ export default function OnboardingPage() {
                 style={{
                   flex: 1,
                   padding: '13px',
-                  background: 'linear-gradient(135deg, #8b6914 0%, #6b4f10 100%)',
-                  border: '1px solid rgba(139,105,20,0.3)',
+                  background: 'linear-gradient(135deg, #7a4f0d 0%, #4e3008 100%)',
+                  border: '1px solid rgba(212,175,100,0.25)',
                   borderRadius: '2px',
                   color: '#fff8ee',
                   fontFamily: "'Playfair Display', Georgia, serif",
@@ -375,7 +391,10 @@ export default function OnboardingPage() {
                   letterSpacing: '0.15em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
+                  transition: 'opacity 0.2s',
                 }}
+                onMouseEnter={e => e.target.style.opacity = '0.85'}
+                onMouseLeave={e => e.target.style.opacity = '1'}
               >
                 {loading ? 'Saving...' : 'Begin Reading'}
               </button>
@@ -384,13 +403,14 @@ export default function OnboardingPage() {
                 style={{
                   padding: '13px 20px',
                   background: 'transparent',
-                  border: '1px solid rgba(139,105,20,0.3)',
+                  border: '1px solid rgba(212,175,100,0.2)',
                   borderRadius: '2px',
-                  color: '#8b6530',
+                  color: 'rgba(232,213,176,0.6)',
                   fontFamily: "'Lora', Georgia, serif",
                   fontSize: '13px',
                   cursor: 'pointer',
                   letterSpacing: '0.04em',
+                  transition: 'all 0.15s',
                 }}
               >
                 Skip

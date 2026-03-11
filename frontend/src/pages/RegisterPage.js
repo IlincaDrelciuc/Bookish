@@ -111,7 +111,7 @@ const styles = {
     outline: 'none',
     boxSizing: 'border-box',
   },
- button: {
+  button: {
     width: '100%',
     padding: '13px',
     background: 'linear-gradient(135deg, #7a4f0d 0%, #4e3008 100%)',
@@ -172,10 +172,20 @@ export default function RegisterPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+
     if (password !== confirm) {
       setError('Passwords do not match');
       return;
     }
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+    if (username.length < 3) {
+      setError('Username must be at least 3 characters long');
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch('http://localhost:3001/api/auth/register', {
@@ -185,7 +195,8 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || 'Registration failed');
+        const msg = data.errors?.[0]?.msg || data.error || 'Registration failed';
+        setError(msg);
       } else {
         localStorage.setItem('token', data.token);
         navigate('/onboarding');
@@ -241,7 +252,7 @@ export default function RegisterPage() {
           <input
             style={styles.input}
             type="password"
-            placeholder="Create a password"
+            placeholder="At least 8 characters"
             value={password}
             onChange={e => setPassword(e.target.value)}
             onFocus={focusStyle}
