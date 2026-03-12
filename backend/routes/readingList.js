@@ -50,18 +50,20 @@ router.get('/', authenticate, async (req, res) => {
   const userId = req.user.userId;
   try {
     const result = await pool.query(
-      `SELECT rl.*, b.title, b.cover_image_url, b.page_count,
-       array_agg(DISTINCT a.name) FILTER (WHERE a.name IS NOT NULL) AS authors
+      `SELECT rl.*, 
+       b.title, b.cover_image_url, b.page_count, b.average_rating, b.publication_year,
+       array_agg(DISTINCT a.name) FILTER (WHERE a.name IS NOT NULL) AS authors,
+       rat.score AS user_rating
        FROM reading_list rl
        JOIN books b ON rl.book_id = b.id
        LEFT JOIN book_authors ba ON b.id = ba.book_id
        LEFT JOIN authors a ON ba.author_id = a.id
+       LEFT JOIN ratings rat ON rat.book_id = b.id AND rat.user_id = $1
        WHERE rl.user_id = $1
-       GROUP BY rl.id, b.title, b.cover_image_url, b.page_count
+       GROUP BY rl.id, b.title, b.cover_image_url, b.page_count, b.average_rating, b.publication_year, rat.score
        ORDER BY rl.added_at DESC`,
       [userId]
     );
-    // Group by status for easy frontend use
     const grouped = {
       'to-read': result.rows.filter(r => r.status === 'to-read'),
       'reading': result.rows.filter(r => r.status === 'reading'),

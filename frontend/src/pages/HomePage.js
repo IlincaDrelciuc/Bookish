@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { apiCall } from '../utils/api';
+import DefaultBookCover from '../components/DefaultBookCover';
 
 const BG_IMAGE = '/fundal_register.avif';
 
@@ -9,6 +10,10 @@ function getWeekNumber() {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
   return Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000));
+}
+
+function hasGoodCover(url) {
+  return url && (url.includes('books.google') || url.includes('openlibrary'));
 }
 
 export default function HomePage() {
@@ -40,21 +45,20 @@ export default function HomePage() {
       .finally(() => setLoadingBow(false));
   }, [token]);
 
-  // Autoscroll
   useEffect(() => {
-  if (sqlRecs.length === 0) return;
-  const interval = setInterval(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const maxScroll = el.scrollWidth - el.clientWidth;
-    if (el.scrollLeft >= maxScroll) {
-      el.scrollTo({ left: 0, behavior: 'smooth' });
-    } else {
-      el.scrollBy({ left: 552, behavior: 'smooth' });
-    }
-  }, 5000);
-  return () => clearInterval(interval);
-}, [sqlRecs]);
+    if (sqlRecs.length === 0) return;
+    const interval = setInterval(() => {
+      const el = scrollRef.current;
+      if (!el) return;
+      const maxScroll = el.scrollWidth - el.clientWidth;
+      if (el.scrollLeft >= maxScroll) {
+        el.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        el.scrollBy({ left: 552, behavior: 'smooth' });
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [sqlRecs]);
 
   function scrollLeft() {
     if (scrollRef.current) scrollRef.current.scrollBy({ left: -400, behavior: 'smooth' });
@@ -93,18 +97,6 @@ export default function HomePage() {
   );
 
   const BookCard = ({ book }) => {
-    const [coverUrl, setCoverUrl] = useState(book.cover_image_url);
-
-    useEffect(() => {
-      if (!coverUrl && book.title) {
-        const author = (book.authors || [])[0] || '';
-        fetch(`http://localhost:3001/api/books/cover-lookup?title=${encodeURIComponent(book.title)}&author=${encodeURIComponent(author)}`)
-          .then(res => res.json())
-          .then(data => { if (data.cover_image_url) setCoverUrl(data.cover_image_url); })
-          .catch(() => {});
-      }
-    }, [book.title]);
-
     return (
       <div
         onClick={() => navigate(`/books/${book.id}`)}
@@ -122,27 +114,22 @@ export default function HomePage() {
           border: '1px solid rgba(212,175,100,0.25)',
           boxShadow: '0 12px 32px rgba(0,0,0,0.6)',
         }}>
-          {coverUrl ? (
+          {hasGoodCover(book.cover_image_url) ? (
             <img
-              src={coverUrl}
+              src={book.cover_image_url}
               alt={book.title}
               style={{
                 width: '100%', height: '100%', objectFit: 'cover',
                 filter: 'sepia(45%) contrast(110%) brightness(85%) saturate(80%)',
               }}
-              onError={e => {
-                e.target.style.display = 'none';
-                e.target.parentNode.style.background = 'rgba(139,101,48,0.15)';
-                setCoverUrl(null);
-              }}
             />
           ) : (
-            <div style={{
-              width: '100%', height: '100%',
-              background: 'rgba(139,101,48,0.15)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '36px',
-            }}>📖</div>
+            <DefaultBookCover
+              title={book.title}
+              author={(book.authors || []).slice(0, 1).join('')}
+              width="100%"
+              height="100%"
+            />
           )}
         </div>
         <p style={{
@@ -214,19 +201,14 @@ export default function HomePage() {
       position: 'relative',
     }}>
 
-      {/* Dark overlay */}
       <div style={{
-        position: 'fixed',
-        inset: 0,
+        position: 'fixed', inset: 0,
         background: 'rgba(8, 5, 2, 0.68)',
-        zIndex: 0,
-        pointerEvents: 'none',
+        zIndex: 0, pointerEvents: 'none',
       }} />
 
-      {/* Hero header */}
       <div style={{
-        position: 'relative',
-        zIndex: 1,
+        position: 'relative', zIndex: 1,
         borderBottom: '1px solid rgba(212,175,100,0.12)',
         padding: '28px 48px 24px',
         backdropFilter: 'blur(10px)',
@@ -256,45 +238,41 @@ export default function HomePage() {
           {!loadingBow && bookOfWeek && (
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '48px', maxWidth: '900px' }}>
 
-             {/* Floating cover */}
-<div
-  onClick={() => navigate(`/books/${bookOfWeek.id}`)}
-  style={{
-    flexShrink: 0,
-    cursor: 'pointer',
-    filter: 'drop-shadow(0 16px 40px rgba(0,0,0,0.7))',
-    transition: 'transform 0.15s',
-    alignSelf: 'stretch',
-  }}
-  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-6px)'}
-  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
->
-  <div style={{
-    width: '200px',
-    height: '100%',
-    minHeight: '300px',
-    borderRadius: '8px', overflow: 'hidden',
-    border: '1px solid rgba(212,175,100,0.25)',
-  }}>
-    {bookOfWeek.cover_image_url ? (
-      <img
-        src={bookOfWeek.cover_image_url}
-        alt={bookOfWeek.title}
-        style={{
-          width: '100%', height: '100%', objectFit: 'cover',
-          filter: 'sepia(45%) contrast(110%) brightness(85%) saturate(80%)',
-        }}
-      />
-    ) : (
-      <div style={{
-        width: '100%', height: '100%',
-        background: 'rgba(139,101,48,0.15)',
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'center', fontSize: '48px',
-      }}>📖</div>
-    )}
-  </div>
-</div>
+              <div
+                onClick={() => navigate(`/books/${bookOfWeek.id}`)}
+                style={{
+                  flexShrink: 0, cursor: 'pointer',
+                  filter: 'drop-shadow(0 16px 40px rgba(0,0,0,0.7))',
+                  transition: 'transform 0.15s',
+                  alignSelf: 'stretch',
+                }}
+                onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-6px)'}
+                onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <div style={{
+                  width: '200px', height: '100%', minHeight: '300px',
+                  borderRadius: '8px', overflow: 'hidden',
+                  border: '1px solid rgba(212,175,100,0.25)',
+                }}>
+                  {hasGoodCover(bookOfWeek.cover_image_url) ? (
+                    <img
+                      src={bookOfWeek.cover_image_url}
+                      alt={bookOfWeek.title}
+                      style={{
+                        width: '100%', height: '100%', objectFit: 'cover',
+                        filter: 'sepia(45%) contrast(110%) brightness(85%) saturate(80%)',
+                      }}
+                    />
+                  ) : (
+                    <DefaultBookCover
+                      title={bookOfWeek.title}
+                      author={(bookOfWeek.authors || []).join(', ')}
+                      width="100%"
+                      height="100%"
+                    />
+                  )}
+                </div>
+              </div>
 
               {/* Info card */}
               <div style={{
@@ -306,9 +284,7 @@ export default function HomePage() {
                 padding: '36px 40px',
                 boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
                 alignSelf: 'stretch',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
+                display: 'flex', flexDirection: 'column', justifyContent: 'center',
               }}>
                 <p style={{
                   fontFamily: "'Lora', Georgia, serif",
@@ -351,7 +327,6 @@ export default function HomePage() {
                   </div>
                 )}
 
-                {/* Description — show placeholder if none in DB */}
                 <p style={{
                   fontFamily: "'Lora', Georgia, serif",
                   fontSize: '13px', color: 'rgba(232,213,176,0.55)',
@@ -375,16 +350,13 @@ export default function HomePage() {
                       padding: '11px 28px',
                       background: 'linear-gradient(135deg, #7a4f0d 0%, #4e3008 100%)',
                       border: '1px solid rgba(212,155,60,0.35)',
-                      borderRadius: '4px',
-                      color: '#f5e6c0',
+                      borderRadius: '4px', color: '#f5e6c0',
                       fontFamily: "'Playfair Display', Georgia, serif",
                       fontSize: '12px', fontWeight: '600',
                       letterSpacing: '0.12em', textTransform: 'uppercase',
                       cursor: 'pointer',
                     }}
-                  >
-                    View Book
-                  </button>
+                  >View Book</button>
                   <button
                     onClick={handleAddToList}
                     disabled={addedToList}
@@ -398,9 +370,7 @@ export default function HomePage() {
                       fontSize: '12px', letterSpacing: '0.06em',
                       cursor: addedToList ? 'default' : 'pointer',
                     }}
-                  >
-                    {addedToList ? '✓ Added to list' : '+ Want to read'}
-                  </button>
+                  >{addedToList ? '✓ Added to list' : '+ Want to read'}</button>
                 </div>
               </div>
             </div>

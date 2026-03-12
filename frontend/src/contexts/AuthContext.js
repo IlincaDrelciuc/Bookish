@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -10,7 +9,6 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const savedToken = localStorage.getItem('bookish_token');
     const savedUser = localStorage.getItem('bookish_user');
-
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
@@ -32,12 +30,22 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('bookish_user');
   }
 
+  function updateUser(userData, jwtToken) {
+    setUser(userData);
+    localStorage.setItem('bookish_user', JSON.stringify(userData));
+    if (jwtToken) {
+      setToken(jwtToken);
+      localStorage.setItem('bookish_token', jwtToken);
+    }
+  }
+
   const value = {
     user,
     token,
     loading,
     login,
     logout,
+    updateUser,
     isLoggedIn: !!user,
   };
 

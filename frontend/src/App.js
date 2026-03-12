@@ -10,6 +10,8 @@ import StatsPage from './pages/StatsPage';
 import HomePage from './pages/HomePage';
 import Navbar from './components/Navbar';
 import RecommendationsTestPage from './pages/RecommendationsTestPage';
+import AccountPage from './pages/AccountPage';
+import ProfilePage from './pages/ProfilePage';
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn, loading } = useAuth();
@@ -32,8 +34,10 @@ function AppRoutes() {
         <Route path='/books/:id' element={<ProtectedRoute><BookDetailPage /></ProtectedRoute>} />
         <Route path='/my-books' element={<ProtectedRoute><MyBooksPage /></ProtectedRoute>} />
         <Route path='/stats' element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
-        <Route path='/' element={<Navigate to={isLoggedIn ? '/home' : '/register'} replace />} />
         <Route path='/recommendations' element={<ProtectedRoute><RecommendationsTestPage /></ProtectedRoute>} />
+        <Route path='/account' element={<ProtectedRoute><AccountPage /></ProtectedRoute>} />
+        <Route path='/' element={<Navigate to={isLoggedIn ? '/home' : '/register'} replace />} />
+        <Route path='/profile/:username' element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
       </Routes>
     </>
   );

@@ -59,14 +59,14 @@ app.get('/api/stats', authenticate, async (req, res) => {
       [userId]
     );
     const topGenres = await pool.query(
-  `SELECT g.name, COUNT(DISTINCT rl.book_id)::integer as count
-   FROM reading_list rl
-   JOIN book_genres bg ON rl.book_id = bg.book_id
-   JOIN genres g ON bg.genre_id = g.id
-   WHERE rl.user_id=$1 AND rl.status='finished'
-   GROUP BY g.id, g.name ORDER BY count DESC LIMIT 5`,
-  [userId]
-);
+      `SELECT g.name, COUNT(DISTINCT rl.book_id)::integer as count
+       FROM reading_list rl
+       JOIN book_genres bg ON rl.book_id = bg.book_id
+       JOIN genres g ON bg.genre_id = g.id
+       WHERE rl.user_id=$1 AND rl.status='finished'
+       GROUP BY g.id, g.name ORDER BY count DESC LIMIT 5`,
+      [userId]
+    );
     const pages = await pool.query(
       `SELECT COALESCE(SUM(b.page_count),0) as total
        FROM reading_list rl JOIN books b ON rl.book_id=b.id
@@ -127,7 +127,130 @@ app.use('/api/reading-list', readingListRoutes);
 const recommendationRoutes = require('./routes/recommendations');
 app.use('/api/recommendations', recommendationRoutes);
 
+const reviewRoutes = require('./routes/reviews');
+app.use('/api/reviews', reviewRoutes);
+
 const PORT = process.env.PORT || 3001;
+
+// GET /api/books/:id/similar
+app.get('/api/books/:id/similar', async (req, res) => {
+  const bookId = parseInt(req.params.id);
+  try {
+    const result = await pool.query(
+      `SELECT b.id, b.title, b.cover_image_url, b.average_rating,
+       array_agg(DISTINCT a.name) FILTER (WHERE a.name IS NOT NULL) AS authors,
+       COUNT(DISTINCT bg_match.genre_id) AS shared_genres
+       FROM books b
+       JOIN book_genres bg_match ON b.id = bg_match.book_id
+       LEFT JOIN book_authors ba ON b.id = ba.book_id
+       LEFT JOIN authors a ON ba.author_id = a.id
+       WHERE bg_match.genre_id IN (
+         SELECT genre_id FROM book_genres WHERE book_id = $1
+       )
+       AND b.id != $1
+       GROUP BY b.id
+       ORDER BY shared_genres DESC, b.average_rating DESC NULLS LAST
+       LIMIT 6`,
+      [bookId]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch similar books' });
+  }
+});
+
+app.get('/api/profile/:username', async (req, res) => {
+  const { username } = req.params;
+  try {
+    const userResult = await pool.query(
+      'SELECT id, username, created_at FROM users WHERE username = $1',
+      [username]
+    );
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const user = userResult.rows[0];
+
+    const statsResult = await pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE status='finished') AS finished,
+         COUNT(*) FILTER (WHERE status='reading') AS reading,
+         COUNT(*) FILTER (WHERE status='to-read') AS to_read
+       FROM reading_list WHERE user_id = $1`,
+      [user.id]
+    );
+
+    const reviewCountResult = await pool.query(
+      `SELECT COUNT(*) AS review_count FROM reviews WHERE user_id = $1`,
+      [user.id]
+    );
+
+    const ratingCountResult = await pool.query(
+      `SELECT COUNT(*) AS rating_count FROM ratings WHERE user_id = $1`,
+      [user.id]
+    );
+
+    const booksThisYearResult = await pool.query(
+      `SELECT COUNT(*) AS count FROM reading_list
+       WHERE user_id = $1 AND status = 'finished'
+       AND EXTRACT(YEAR FROM added_at) = EXTRACT(YEAR FROM NOW())`,
+      [user.id]
+    );
+
+    const currentlyReadingResult = await pool.query(
+  `SELECT b.id, b.title, b.cover_image_url, b.page_count, rl.current_page AS progress
+   FROM reading_list rl JOIN books b ON rl.book_id = b.id
+   WHERE rl.user_id = $1 AND rl.status = 'reading'
+   ORDER BY rl.added_at DESC`,
+  [user.id]
+);
+
+    const recentResult = await pool.query(
+      `SELECT b.id, b.title, b.cover_image_url
+       FROM reading_list rl JOIN books b ON rl.book_id = b.id
+       WHERE rl.user_id = $1 AND rl.status = 'finished'
+       ORDER BY rl.added_at DESC NULLS LAST LIMIT 6`,
+      [user.id]
+    );
+
+    const reviewsResult = await pool.query(
+      `SELECT r.body, r.created_at, b.title, b.id AS book_id
+       FROM reviews r JOIN books b ON r.book_id = b.id
+       WHERE r.user_id = $1
+       ORDER BY r.created_at DESC LIMIT 3`,
+      [user.id]
+    );
+
+    const genresResult = await pool.query(
+      `SELECT g.name, COUNT(*) AS count
+       FROM reading_list rl
+       JOIN book_genres bg ON rl.book_id = bg.book_id
+       JOIN genres g ON bg.genre_id = g.id
+       WHERE rl.user_id = $1 AND rl.status = 'finished'
+       GROUP BY g.name
+       ORDER BY count DESC
+       LIMIT 5`,
+      [user.id]
+    );
+
+    res.json({
+      user: { username: user.username, memberSince: user.created_at },
+      stats: {
+        ...statsResult.rows[0],
+        reviewCount: parseInt(reviewCountResult.rows[0].review_count),
+        ratingCount: parseInt(ratingCountResult.rows[0].rating_count),
+        booksThisYear: parseInt(booksThisYearResult.rows[0].count),
+      },
+      currentlyReading: currentlyReadingResult.rows,
+      recentlyFinished: recentResult.rows,
+      recentReviews: reviewsResult.rows,
+      favouriteGenres: genresResult.rows,
+    });
+  } catch (error) {
+    console.error('Profile error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch profile' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Bookish backend running on http://localhost:${PORT}`);
