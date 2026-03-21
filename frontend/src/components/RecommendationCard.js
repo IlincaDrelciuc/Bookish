@@ -5,10 +5,11 @@ import DefaultBookCover from './DefaultBookCover';
 export default function RecommendationCard({ book, rank, reason, geminiMode }) {
   const navigate = useNavigate();
   const [coverUrl, setCoverUrl] = useState(book.cover_image_url);
+  const [navigating, setNavigating] = useState(false);
 
   useEffect(() => {
     if (!coverUrl && book.title) {
-      const author = (book.authors || [])[0] || '';
+      const author = (book.authors || [])[0] || book.author || '';
       fetch(`http://localhost:3001/api/books/cover-lookup?title=${encodeURIComponent(book.title)}&author=${encodeURIComponent(author)}`)
         .then(res => res.json())
         .then(data => { if (data.cover_image_url) setCoverUrl(data.cover_image_url); })
@@ -16,8 +17,79 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
     }
   }, [book.title]);
 
-  const handleClick = () => {
-    if (book.id && typeof book.id === 'number') navigate(`/books/${book.id}`);
+  const handleClick = async () => {
+    // If we already have a valid numeric DB id, just navigate
+    if (book.id && typeof book.id === 'number') {
+      navigate(`/books/${book.id}`);
+      return;
+    }
+
+    // Gemini book — search DB by title first
+    setNavigating(true);
+    try {
+      const author = book.author || (book.authors || [])[0] || '';
+      const query = encodeURIComponent(book.title);
+
+      // Search local DB
+      const localResults = await fetch(
+        `http://localhost:3001/api/books/search?query=${query}&limit=5`
+      ).then(r => r.json());
+
+      // Try exact title match first, then partial
+      const exactMatch = localResults.find(
+        b => b.title.toLowerCase() === book.title.toLowerCase()
+      );
+      const partialMatch = localResults.find(
+        b => b.title.toLowerCase().includes(book.title.toLowerCase().slice(0, 10))
+      );
+
+      if (exactMatch) {
+        navigate(`/books/${exactMatch.id}`);
+        return;
+      }
+
+      // Not in local DB — try Google Books and import
+      const combined = await fetch(
+        `http://localhost:3001/api/books/search/combined?query=${query}`
+      ).then(r => r.json());
+
+      const googleResults = combined.google || [];
+      const googleMatch = googleResults.find(
+        b => b.title.toLowerCase() === book.title.toLowerCase()
+      ) || googleResults[0];
+
+      if (googleMatch) {
+        const imported = await fetch('http://localhost:3001/api/books/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            google_books_id: googleMatch.google_books_id,
+            title: googleMatch.title,
+            authors: googleMatch.authors,
+            genres: googleMatch.genres,
+            cover_image_url: googleMatch.cover_image_url,
+            average_rating: googleMatch.average_rating,
+            ratings_count: googleMatch.ratings_count,
+            publication_year: googleMatch.publication_year,
+            page_count: googleMatch.page_count,
+            synopsis: googleMatch.synopsis,
+          }),
+        }).then(r => r.json());
+
+        navigate(`/books/${imported.id}`);
+        return;
+      }
+
+      // Last resort — use partial match from local DB
+      if (partialMatch) {
+        navigate(`/books/${partialMatch.id}`);
+      }
+
+    } catch (err) {
+      console.error('Navigation error:', err);
+    } finally {
+      setNavigating(false);
+    }
   };
 
   function renderStars(rating) {
@@ -43,7 +115,7 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
   ) : (
     <DefaultBookCover
       title={book.title}
-      author={(book.authors || []).join(', ')}
+      author={(book.authors || []).join(', ') || book.author || ''}
       width={width}
       height={height}
     />
@@ -54,18 +126,16 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
       <div
         onClick={handleClick}
         style={{
-          cursor: book.id && typeof book.id === 'number' ? 'pointer' : 'default',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          backgroundColor: 'rgba(172, 158, 133, 0.8)',
+          cursor: navigating ? 'wait' : 'pointer',
+          borderRadius: '8px', overflow: 'hidden',
+          backgroundColor: navigating ? 'rgba(152,138,113,0.8)' : 'rgba(172,158,133,0.8)',
           border: '1px solid rgba(139,101,48,0.15)',
           boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
           transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
-          display: 'flex',
-          flexDirection: 'row',
+          display: 'flex', flexDirection: 'row',
         }}
         onMouseEnter={e => {
-          if (book.id && typeof book.id === 'number') {
+          if (!navigating) {
             e.currentTarget.style.transform = 'translateY(-4px)';
             e.currentTarget.style.boxShadow = '0 16px 40px rgba(0,0,0,0.35)';
             e.currentTarget.style.borderColor = 'rgba(139,101,48,0.35)';
@@ -96,7 +166,10 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
           )}
         </div>
 
-        <div style={{ padding: '16px 18px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{
+          padding: '16px 18px', flex: 1,
+          display: 'flex', flexDirection: 'column', justifyContent: 'center',
+        }}>
           <h3 style={{
             margin: '0 0 4px 0',
             fontFamily: "'Playfair Display', Georgia, serif",
@@ -108,7 +181,7 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
             fontFamily: "'Lora', Georgia, serif",
             fontSize: '12px', color: '#302415', fontStyle: 'italic',
             overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>{(book.authors || []).join(', ') || 'Unknown Author'}</p>
+          }}>{(book.authors || []).join(', ') || book.author || 'Unknown Author'}</p>
 
           {book.average_rating && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
@@ -127,7 +200,9 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
               lineHeight: '1.6', fontStyle: 'italic',
               borderTop: '1px solid rgba(139,101,48,0.2)',
               paddingTop: '8px',
-            }}>{reason}</p>
+            }}>
+              {navigating ? 'Finding book...' : reason}
+            </p>
           )}
         </div>
       </div>
@@ -141,7 +216,7 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
         width: '100%',
         cursor: book.id && typeof book.id === 'number' ? 'pointer' : 'default',
         borderRadius: '8px', overflow: 'hidden',
-        backgroundColor: 'rgba(172, 158, 133, 0.8)',
+        backgroundColor: 'rgba(172,158,133,0.8)',
         border: '1px solid rgba(139,101,48,0.15)',
         boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
         transition: 'transform 0.15s, box-shadow 0.15s, border-color 0.15s',
@@ -203,7 +278,10 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
         )}
 
         {book.total_score !== undefined && (
-          <div style={{ fontFamily: "'Lora', Georgia, serif", fontSize: '11px', color: '#3d2e1a', marginBottom: '6px' }}>
+          <div style={{
+            fontFamily: "'Lora', Georgia, serif",
+            fontSize: '11px', color: '#3d2e1a', marginBottom: '6px',
+          }}>
             Score: {book.total_score}
             {book.author_bonus > 0 && (
               <span style={{ color: '#8b6914', marginLeft: '4px' }}>· author match ✓</span>

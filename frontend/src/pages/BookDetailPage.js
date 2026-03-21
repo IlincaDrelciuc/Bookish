@@ -171,21 +171,9 @@ export default function BookDetailPage() {
     </div>
   );
 
-  // Use Goodreads rating first, fall back to community rating
+  // Show Goodreads rating as display value, fall back to community rating
   const avgRating = parseFloat(book.average_rating) ||
                     parseFloat(book.communityRating?.average) || 0;
-  const ratingCount = book.ratings_count || 0;
-
-  // Work out what rating label to show
-  const ratingLabel = (() => {
-    if (book.average_rating && ratingCount > 0) {
-      return `${ratingCount.toLocaleString()} ratings on Goodreads`;
-    }
-    if (book.communityRating?.count > 0) {
-      return `${book.communityRating.count} rating${book.communityRating.count !== 1 ? 's' : ''} on Bookish`;
-    }
-    return 'No ratings yet';
-  })();
 
   return (
     <div style={{
@@ -210,8 +198,7 @@ export default function BookDetailPage() {
       }}>
         <p style={{
           fontSize: '13px', color: 'rgba(212,175,100,0.6)',
-          letterSpacing: '0.1em', textTransform: 'uppercase',
-          margin: 0,
+          letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0,
         }}>Book Details</p>
       </div>
 
@@ -347,7 +334,7 @@ export default function BookDetailPage() {
               by {(book.authors || []).map(a => a.name).join(', ')}
             </p>
 
-            {/* Rating — only show stars if there is actually a rating */}
+            {/* Rating */}
             {avgRating > 0 ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
@@ -362,12 +349,16 @@ export default function BookDetailPage() {
                   </span>
                 </div>
                 <p style={{
-                  fontFamily: "'Lora', Georgia, serif",
-                  fontSize: '12px', color: 'rgba(212,175,100,0.45)',
-                  fontStyle: 'italic', margin: '0 0 20px 0',
-                }}>
-                  {ratingLabel}
-                </p>
+  fontFamily: "'Lora', Georgia, serif",
+  fontSize: '12px', color: 'rgba(212,175,100,0.45)',
+  fontStyle: 'italic', margin: '0 0 20px 0',
+}}>
+  {book.communityRating?.count > 0
+    ? `${book.communityRating.count} rating${book.communityRating.count !== 1 ? 's' : ''} on Bookish`
+    : !book.average_rating
+    ? 'Be the first to rate this book below'
+    : null}
+</p>
               </>
             ) : (
               <p style={{

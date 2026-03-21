@@ -21,38 +21,86 @@ export default function RecommendationsTestPage() {
     apiCall('GET', '/recommendations/gemini', null, token)
       .then(async data => {
         const results = await Promise.all(
-          data.recommendations.map(async (r) => {
+          (data.recommendations || []).map(async (r) => {
             try {
+              // Step 1 — search local DB for exact title match
               const searchResults = await apiCall(
                 'GET',
-                `/books/search?query=${encodeURIComponent(r.title)}&limit=5`,
-                null,
-                token
+                `/books/search?query=${encodeURIComponent(r.title)}&limit=5`
               );
 
-              const match = Array.isArray(searchResults)
-                ? searchResults.find(b => {
-                    const dbTitle = b.title.toLowerCase();
-                    const geminiTitle = r.title.toLowerCase();
-                    return (
-                      dbTitle.includes(geminiTitle) ||
-                      geminiTitle.includes(dbTitle) ||
-                      dbTitle.startsWith(geminiTitle) ||
-                      geminiTitle.split(':')[0].trim() === dbTitle.split(':')[0].trim()
-                    );
-                  }) || null
+              const exactMatch = Array.isArray(searchResults)
+                ? searchResults.find(b =>
+                    b.title.toLowerCase() === r.title.toLowerCase()
+                  )
                 : null;
 
-              if (!match?.id) return null;
+              if (exactMatch) {
+                return {
+                  id: exactMatch.id,
+                  title: exactMatch.title,
+                  authors: exactMatch.authors || [r.author],
+                  reason: r.reason,
+                  cover_image_url: exactMatch.cover_image_url || null,
+                  average_rating: exactMatch.average_rating || null,
+                };
+              }
 
-              return {
-                id: match.id,
-                title: r.title,
-                authors: [r.author],
-                reason: r.reason,
-                cover_image_url: match.cover_image_url || null,
-                average_rating: match.average_rating || null,
-              };
+              // Step 2 — not in local DB, try Google Books
+              const combined = await apiCall(
+                'GET',
+                `/books/search/combined?query=${encodeURIComponent(r.title)}`
+              );
+
+              const googleResults = combined.google || [];
+              const googleMatch = googleResults.find(
+                b => b.title.toLowerCase() === r.title.toLowerCase()
+              ) || googleResults[0];
+
+              if (googleMatch) {
+                // Import into DB so it works like any other book
+                const imported = await apiCall('POST', '/books/import', {
+                  google_books_id: googleMatch.google_books_id,
+                  title: googleMatch.title,
+                  authors: googleMatch.authors,
+                  genres: googleMatch.genres,
+                  cover_image_url: googleMatch.cover_image_url,
+                  average_rating: googleMatch.average_rating,
+                  ratings_count: googleMatch.ratings_count,
+                  publication_year: googleMatch.publication_year,
+                  page_count: googleMatch.page_count,
+                  synopsis: googleMatch.synopsis,
+                });
+
+                return {
+                  id: imported.id,
+                  title: googleMatch.title,
+                  authors: googleMatch.authors || [r.author],
+                  reason: r.reason,
+                  cover_image_url: googleMatch.cover_image_url || null,
+                  average_rating: googleMatch.average_rating || null,
+                };
+              }
+
+              // Step 3 — last resort, use best local partial match
+              const partialMatch = Array.isArray(searchResults)
+                ? searchResults[0]
+                : null;
+
+              if (partialMatch) {
+                return {
+                  id: partialMatch.id,
+                  title: r.title,
+                  authors: partialMatch.authors || [r.author],
+                  reason: r.reason,
+                  cover_image_url: partialMatch.cover_image_url || null,
+                  average_rating: partialMatch.average_rating || null,
+                };
+              }
+
+              // Drop it — couldn't find it anywhere
+              return null;
+
             } catch (err) {
               console.error('Error processing', r.title, err);
               return null;
@@ -62,7 +110,7 @@ export default function RecommendationsTestPage() {
 
         setGeminiRecs(results.filter(Boolean));
       })
-      .catch(err => setSqlError(err.message))
+      .catch(err => setGeminiError(err.message))
       .finally(() => setGeminiLoading(false));
   }, [token]);
 
@@ -77,28 +125,24 @@ export default function RecommendationsTestPage() {
       paddingBottom: '60px',
       position: 'relative',
     }}>
-
       <div style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(8, 5, 2, 0.68)',
-        zIndex: 0,
-        pointerEvents: 'none',
+        position: 'fixed', inset: 0,
+        background: 'rgba(8,5,2,0.68)',
+        zIndex: 0, pointerEvents: 'none',
       }} />
 
       <div style={{
-        position: 'relative',
-        zIndex: 1,
+        position: 'relative', zIndex: 1,
         borderBottom: '1px solid rgba(212,175,100,0.12)',
         padding: '28px 48px 24px',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
-        background: 'rgba(20, 12, 4, 0.25)',
+        background: 'rgba(20,12,4,0.25)',
       }}>
         <p style={{
           fontSize: '13px', color: 'rgba(212,175,100,0.6)',
           letterSpacing: '0.1em', textTransform: 'uppercase',
-          margin: 0, marginBottom: '8px',
+          margin: '0 0 8px 0',
         }}>Curated For You</p>
         <h1 style={{
           fontFamily: "'Playfair Display', Georgia, serif",
