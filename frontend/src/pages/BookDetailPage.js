@@ -40,7 +40,6 @@ export default function BookDetailPage() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
 
-    // Fetch similar books in parallel
     apiCall('GET', `/books/${id}/similar`)
       .then(setSimilarBooks)
       .catch(() => setSimilarBooks([]));
@@ -172,8 +171,21 @@ export default function BookDetailPage() {
     </div>
   );
 
-  const avgRating = parseFloat(book.average_rating) || 0;
+  // Use Goodreads rating first, fall back to community rating
+  const avgRating = parseFloat(book.average_rating) ||
+                    parseFloat(book.communityRating?.average) || 0;
   const ratingCount = book.ratings_count || 0;
+
+  // Work out what rating label to show
+  const ratingLabel = (() => {
+    if (book.average_rating && ratingCount > 0) {
+      return `${ratingCount.toLocaleString()} ratings on Goodreads`;
+    }
+    if (book.communityRating?.count > 0) {
+      return `${book.communityRating.count} rating${book.communityRating.count !== 1 ? 's' : ''} on Bookish`;
+    }
+    return 'No ratings yet';
+  })();
 
   return (
     <div style={{
@@ -281,15 +293,13 @@ export default function BookDetailPage() {
             {/* My Rating */}
             {isLoggedIn && (
               <div style={{
-                ...cardStyle,
-                padding: '16px',
+                ...cardStyle, padding: '16px',
                 display: 'flex', flexDirection: 'column', gap: '8px',
               }}>
                 <p style={{
                   fontFamily: "'Lora', Georgia, serif",
                   fontSize: '11px', color: 'rgba(212,175,100,0.45)',
-                  letterSpacing: '0.1em', textTransform: 'uppercase',
-                  margin: 0,
+                  letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0,
                 }}>
                   {myRating ? 'My Rating' : 'Rate this book'}
                 </p>
@@ -302,13 +312,10 @@ export default function BookDetailPage() {
                       onMouseLeave={() => setHoverStar(null)}
                       style={{
                         background: 'none', border: 'none',
-                        cursor: 'pointer', padding: '0 1px',
-                        fontSize: '22px',
+                        cursor: 'pointer', padding: '0 1px', fontSize: '22px',
                         color: n <= (hoverStar ?? myRating)
-                          ? '#d4af37'
-                          : 'rgba(212,175,100,0.2)',
-                        transition: 'color 0.1s',
-                        lineHeight: 1,
+                          ? '#d4af37' : 'rgba(212,175,100,0.2)',
+                        transition: 'color 0.1s', lineHeight: 1,
                       }}
                     >★</button>
                   ))}
@@ -340,24 +347,37 @@ export default function BookDetailPage() {
               by {(book.authors || []).map(a => a.name).join(', ')}
             </p>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '24px', color: '#d4af37', letterSpacing: '3px' }}>
-                {'★'.repeat(Math.round(avgRating))}{'☆'.repeat(5 - Math.round(avgRating))}
-              </span>
-              <span style={{
-                fontSize: '24px', fontWeight: '700', color: '#f0e0c0',
-                fontFamily: "'Playfair Display', Georgia, serif",
+            {/* Rating — only show stars if there is actually a rating */}
+            {avgRating > 0 ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '24px', color: '#d4af37', letterSpacing: '3px' }}>
+                    {'★'.repeat(Math.round(avgRating))}{'☆'.repeat(5 - Math.round(avgRating))}
+                  </span>
+                  <span style={{
+                    fontSize: '24px', fontWeight: '700', color: '#f0e0c0',
+                    fontFamily: "'Playfair Display', Georgia, serif",
+                  }}>
+                    {avgRating.toFixed(2)}
+                  </span>
+                </div>
+                <p style={{
+                  fontFamily: "'Lora', Georgia, serif",
+                  fontSize: '12px', color: 'rgba(212,175,100,0.45)',
+                  fontStyle: 'italic', margin: '0 0 20px 0',
+                }}>
+                  {ratingLabel}
+                </p>
+              </>
+            ) : (
+              <p style={{
+                fontFamily: "'Lora', Georgia, serif",
+                fontSize: '12px', color: 'rgba(212,175,100,0.35)',
+                fontStyle: 'italic', margin: '0 0 20px 0',
               }}>
-                {avgRating.toFixed(2)}
-              </span>
-            </div>
-            <p style={{
-              fontFamily: "'Lora', Georgia, serif",
-              fontSize: '12px', color: 'rgba(212,175,100,0.45)',
-              fontStyle: 'italic', margin: '0 0 20px 0',
-            }}>
-              {ratingCount.toLocaleString()} ratings on Goodreads
-            </p>
+                No ratings yet — be the first to rate this book
+              </p>
+            )}
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
               {(book.genres || []).map(g => (
@@ -489,7 +509,9 @@ export default function BookDetailPage() {
                     fontSize: '14px', fontWeight: '600', color: '#f0e0c0',
                   }}>{review.username}</span>
                   <span style={{ fontSize: '12px', color: 'rgba(212,175,100,0.5)', fontStyle: 'italic' }}>
-                    {new Date(review.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {new Date(review.created_at).toLocaleDateString('en-GB', {
+                      day: 'numeric', month: 'short', year: 'numeric',
+                    })}
                   </span>
                 </div>
                 {review.user_rating && (
@@ -541,7 +563,6 @@ export default function BookDetailPage() {
                     transition: 'transform 0.18s ease',
                   }}
                 >
-                  {/* Cover */}
                   <div style={{
                     width: '100%', aspectRatio: '2/3',
                     borderRadius: '6px', overflow: 'hidden',
@@ -570,21 +591,16 @@ export default function BookDetailPage() {
                       />
                     )}
                   </div>
-
-                  {/* Title */}
                   <p style={{
                     fontFamily: "'Lora', Georgia, serif",
                     fontSize: '12px', color: 'rgba(232,213,176,0.8)',
                     margin: '0 0 3px 0',
                     overflow: 'hidden', textOverflow: 'ellipsis',
                     display: '-webkit-box', WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    lineHeight: '1.4',
+                    WebkitBoxOrient: 'vertical', lineHeight: '1.4',
                   }}>
                     {b.title}
                   </p>
-
-                  {/* Rating */}
                   {b.average_rating && (
                     <p style={{
                       fontFamily: "'Lora', Georgia, serif",
