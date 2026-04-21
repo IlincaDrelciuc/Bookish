@@ -61,42 +61,43 @@ async function runEvaluation() {
     console.error('ERROR: ratings.csv not found');
     process.exit(1);
   }
-
   const records = parse(fs.readFileSync(csvPath, 'utf8'), {
     columns: true, skip_empty_lines: true, trim: true,
   });
   console.log(`Loaded ${records.length} ratings.`);
 
-  console.log('Building book ID lookup from database...');
-  const allBooks = await pool.query('SELECT id, goodbooks_id FROM books WHERE goodbooks_id IS NOT NULL');
-  const goodbooksToInternal = {};
-  for (const row of allBooks.rows) {
-    goodbooksToInternal[row.goodbooks_id] = row.id;
-  }
-  console.log(`Loaded ${Object.keys(goodbooksToInternal).length} books from database.`);
+  // Check how many books exist with IDs in the ratings range
+  const maxBookId = await pool.query('SELECT MAX(id) FROM books');
+  console.log(`Max internal book ID in database: ${maxBookId.rows[0].max}`);
 
+  // Build user ratings using internal book ID directly
+  // ratings.csv book_id should be 1-10000 matching internal IDs
   const userRatings = {};
+  let matched = 0;
+  let unmatched = 0;
+
   for (const r of records) {
-    const goodbooksBookId = parseInt(r.book_id);
-    const internalId = goodbooksToInternal[goodbooksBookId];
-    if (!internalId) continue;
+    const bookId = parseInt(r.book_id);
+    // Only use book IDs that exist in our range
+    if (bookId < 1 || bookId > 10000) { unmatched++; continue; }
+    matched++;
     const uid = r.user_id;
     if (!userRatings[uid]) userRatings[uid] = [];
     userRatings[uid].push({
-      internalId,
+      internalId: bookId,
       rating: parseInt(r.rating),
     });
   }
 
+  console.log(`Matched: ${matched} ratings, Unmatched: ${unmatched}`);
+
   const eligibleUsers = Object.entries(userRatings)
     .filter(([uid, ratings]) => ratings.length >= 5)
     .map(([uid, ratings]) => ({ uid, ratings }));
-
-  console.log(`Found ${eligibleUsers.length} users with 5+ matched ratings.`);
+  console.log(`Found ${eligibleUsers.length} users with 5+ ratings.`);
 
   const shuffled = eligibleUsers.sort(() => Math.random() - 0.5);
   const testUsers = shuffled.slice(0, 200);
-
   console.log(`Testing on ${testUsers.length} users...`);
   console.log('This may take 2-5 minutes. Please wait.\n');
 
@@ -112,7 +113,6 @@ async function runEvaluation() {
     const knownBooks = ratings
       .filter(r => r.internalId !== hiddenBook.internalId)
       .map(r => r.internalId);
-
     if (knownBooks.length === 0) continue;
 
     const genreResult = await pool.query(
@@ -127,7 +127,6 @@ async function runEvaluation() {
       [knownBooks]
     );
     const authorIds = authorResult.rows.map(r => r.author_id);
-
     const excludeIds = [...knownBooks];
 
     const v1Results = await getVariantA(pool, excludeIds, genreIds);
@@ -135,7 +134,6 @@ async function runEvaluation() {
 
     if (v1Results.includes(hiddenBook.internalId)) hitsV1++;
     if (v2Results.includes(hiddenBook.internalId)) hitsV2++;
-
     tested++;
 
     if (tested % 25 === 0) {
@@ -158,7 +156,7 @@ async function runEvaluation() {
   console.log(`  Hits:     ${hitsV2}`);
   console.log(`  Hit@50:   ${tested > 0 ? ((hitsV2/tested)*100).toFixed(2) : '0.00'}%`);
   console.log(`─────────────────────────────────────`);
-  const improvement = hitsV1 > 0 ? (((hitsV2-hitsV1)/hitsV1)*100).toFixed(1) : '0.0';
+  const improvement = hitsV1 > 0 ? (((hitsV2-hitsV1)/hitsV1)*100).toFixed(1) : 'N/A';
   console.log(`Improvement V2 over V1: ${improvement}%`);
   console.log('════════════════════════════════════════');
 
