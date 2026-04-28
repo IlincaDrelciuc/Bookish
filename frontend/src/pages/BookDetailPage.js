@@ -25,6 +25,8 @@ export default function BookDetailPage() {
   const [hoverStar, setHoverStar] = useState(null);
   const [similarBooks, setSimilarBooks] = useState([]);
   const [hoverBookId, setHoverBookId] = useState(null);
+  const [showRatingPrompt, setShowRatingPrompt] = useState(false);
+  const [hoverPromptStar, setHoverPromptStar] = useState(null);
 
   useEffect(() => {
     apiCall('GET', `/books/${id}`)
@@ -43,7 +45,7 @@ export default function BookDetailPage() {
     apiCall('GET', `/books/${id}/similar`)
       .then(setSimilarBooks)
       .catch(() => setSimilarBooks([]));
-  }, [id]);
+}, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isLoggedIn || !token) return;
@@ -78,6 +80,10 @@ export default function BookDetailPage() {
     try {
       await apiCall('POST', '/reading-list', { bookId: parseInt(id), status }, token);
       setReadingStatus(status);
+      // Show rating prompt when finishing a book that hasn't been rated yet
+      if (status === 'finished' && !myRating) {
+        setShowRatingPrompt(true);
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -171,7 +177,6 @@ export default function BookDetailPage() {
     </div>
   );
 
-  // Show Goodreads rating as display value, fall back to community rating
   const avgRating = parseFloat(book.average_rating) ||
                     parseFloat(book.communityRating?.average) || 0;
 
@@ -187,6 +192,94 @@ export default function BookDetailPage() {
       position: 'relative',
     }}>
       {overlayBg}
+
+      {/* ── Rating prompt popup ── */}
+      {showRatingPrompt && (
+        <div
+          onClick={() => setShowRatingPrompt(false)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.65)',
+            zIndex: 200,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'rgba(14,8,2,0.97)',
+              backdropFilter: 'blur(20px)',
+              border: '1px solid rgba(212,175,100,0.25)',
+              borderRadius: '12px',
+              padding: '44px 52px',
+              maxWidth: '420px', width: '90%',
+              textAlign: 'center',
+              boxShadow: '0 32px 80px rgba(0,0,0,0.7)',
+            }}
+          >
+            <p style={{
+              fontFamily: "'Lora', Georgia, serif",
+              fontSize: '11px', color: 'rgba(212,175,100,0.5)',
+              letterSpacing: '0.14em', textTransform: 'uppercase',
+              margin: '0 0 14px 0',
+            }}>You finished this book</p>
+
+            <h3 style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: '22px', fontWeight: '700',
+              color: '#f0e0c0', margin: '0 0 6px 0',
+              lineHeight: 1.2,
+            }}>{book.title}</h3>
+
+            <p style={{
+              fontFamily: "'Lora', Georgia, serif",
+              fontSize: '13px', color: 'rgba(212,175,100,0.55)',
+              fontStyle: 'italic', margin: '0 0 28px 0',
+            }}>How would you rate it?</p>
+
+            {/* Stars */}
+            <div style={{
+              display: 'flex', justifyContent: 'center',
+              gap: '6px', marginBottom: '28px',
+            }}>
+              {[1, 2, 3, 4, 5].map(n => (
+                <button
+                  key={n}
+                  onClick={async () => {
+                    await rateBook(n);
+                    setShowRatingPrompt(false);
+                  }}
+                  onMouseEnter={() => setHoverPromptStar(n)}
+                  onMouseLeave={() => setHoverPromptStar(null)}
+                  style={{
+                    background: 'none', border: 'none',
+                    cursor: 'pointer', fontSize: '38px',
+                    color: n <= (hoverPromptStar ?? 0)
+                      ? '#d4af37'
+                      : 'rgba(212,175,100,0.2)',
+                    transition: 'color 0.1s, transform 0.1s',
+                    transform: hoverPromptStar === n ? 'scale(1.2)' : 'scale(1)',
+                    lineHeight: 1, padding: '2px',
+                  }}
+                >★</button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowRatingPrompt(false)}
+              style={{
+                background: 'transparent', border: 'none',
+                color: 'rgba(212,175,100,0.3)',
+                fontFamily: "'Lora', Georgia, serif",
+                fontSize: '12px', fontStyle: 'italic',
+                cursor: 'pointer', textDecoration: 'underline',
+              }}
+            >
+              Skip for now
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{
         position: 'relative', zIndex: 1,
@@ -334,7 +427,6 @@ export default function BookDetailPage() {
               by {(book.authors || []).map(a => a.name).join(', ')}
             </p>
 
-            {/* Rating */}
             {avgRating > 0 ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
@@ -349,16 +441,16 @@ export default function BookDetailPage() {
                   </span>
                 </div>
                 <p style={{
-  fontFamily: "'Lora', Georgia, serif",
-  fontSize: '12px', color: 'rgba(212,175,100,0.45)',
-  fontStyle: 'italic', margin: '0 0 20px 0',
-}}>
-  {book.communityRating?.count > 0
-    ? `${book.communityRating.count} rating${book.communityRating.count !== 1 ? 's' : ''} on Bookish`
-    : !book.average_rating
-    ? 'Be the first to rate this book below'
-    : null}
-</p>
+                  fontFamily: "'Lora', Georgia, serif",
+                  fontSize: '12px', color: 'rgba(212,175,100,0.45)',
+                  fontStyle: 'italic', margin: '0 0 20px 0',
+                }}>
+                  {book.communityRating?.count > 0
+                    ? `${book.communityRating.count} rating${book.communityRating.count !== 1 ? 's' : ''} on Bookish`
+                    : !book.average_rating
+                    ? 'Be the first to rate this book below'
+                    : null}
+                </p>
               </>
             ) : (
               <p style={{

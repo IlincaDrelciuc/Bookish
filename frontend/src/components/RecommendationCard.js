@@ -12,30 +12,38 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
       const author = (book.authors || [])[0] || book.author || '';
       fetch(`http://localhost:3001/api/books/cover-lookup?title=${encodeURIComponent(book.title)}&author=${encodeURIComponent(author)}`)
         .then(res => res.json())
-        .then(data => { if (data.cover_image_url) setCoverUrl(data.cover_image_url); })
+        .then(async data => {
+          if (data.cover_image_url) {
+            setCoverUrl(data.cover_image_url);
+            // Save cover to DB so book detail page shows the same cover
+            if (book.id && typeof book.id === 'number') {
+              try {
+                await fetch(`http://localhost:3001/api/books/${book.id}/cover`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ cover_image_url: data.cover_image_url }),
+                });
+              } catch (e) { /* silent fail */ }
+            }
+          }
+        })
         .catch(() => {});
     }
-  }, [book.title]);
-
+  }, [book.title, book.id, book.author, book.authors, coverUrl]);
   const handleClick = async () => {
-    // If we already have a valid numeric DB id, just navigate
     if (book.id && typeof book.id === 'number') {
       navigate(`/books/${book.id}`);
       return;
     }
 
-    // Gemini book — search DB by title first
     setNavigating(true);
     try {
-      const author = book.author || (book.authors || [])[0] || '';
       const query = encodeURIComponent(book.title);
 
-      // Search local DB
       const localResults = await fetch(
         `http://localhost:3001/api/books/search?query=${query}&limit=5`
       ).then(r => r.json());
 
-      // Try exact title match first, then partial
       const exactMatch = localResults.find(
         b => b.title.toLowerCase() === book.title.toLowerCase()
       );
@@ -48,7 +56,6 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
         return;
       }
 
-      // Not in local DB — try Google Books and import
       const combined = await fetch(
         `http://localhost:3001/api/books/search/combined?query=${query}`
       ).then(r => r.json());
@@ -75,16 +82,13 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
             synopsis: googleMatch.synopsis,
           }),
         }).then(r => r.json());
-
         navigate(`/books/${imported.id}`);
         return;
       }
 
-      // Last resort — use partial match from local DB
       if (partialMatch) {
         navigate(`/books/${partialMatch.id}`);
       }
-
     } catch (err) {
       console.error('Navigation error:', err);
     } finally {

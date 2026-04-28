@@ -252,6 +252,20 @@ app.get('/api/profile/:username', async (req, res) => {
   }
 });
 
+app.patch('/api/books/:id/cover', async (req, res) => {
+  const bookId = parseInt(req.params.id);
+  const { cover_image_url } = req.body;
+  try {
+    await pool.query(
+      'UPDATE books SET cover_image_url = $1 WHERE id = $2',
+      [cover_image_url, bookId]
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update cover' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Bookish backend running on http://localhost:${PORT}`);
 });

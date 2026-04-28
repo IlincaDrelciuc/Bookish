@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import BookCard from '../components/BookCard';
 import DefaultBookCover from '../components/DefaultBookCover';
@@ -55,12 +55,10 @@ export default function CataloguePage() {
       if (minRating) params.append('minRating', minRating);
 
       const timer = setTimeout(() => {
-        // Always fetch local results
         const localFetch = apiCall('GET', `/books/search?${params.toString()}`)
           .then(data => setBooks(data))
           .catch(console.error);
 
-        // Only fetch Google Books if there's a text query
         const googleFetch = isTextSearching
           ? apiCall('GET', `/books/search/combined?query=${encodeURIComponent(searchQuery)}`)
               .then(data => setGoogleBooks(data.google || []))
@@ -81,7 +79,6 @@ export default function CataloguePage() {
     }
   }, [currentPage, searchQuery, selectedGenre, minRating, isSearching, isTextSearching]);
 
-  // When user clicks a Google Books result — import it then navigate
   async function handleGoogleBookClick(googleBook) {
     setImportingId(googleBook.google_books_id);
     try {
@@ -107,7 +104,7 @@ export default function CataloguePage() {
 
   const inputStyle = {
     padding: '10px 14px',
-    background: 'rgba(20,12,4,0.5)',
+    background: 'rgba(20,12,4,0.7)',
     border: '1px solid rgba(212,175,100,0.2)',
     borderRadius: '2px',
     color: '#e8d5b0',
@@ -115,6 +112,17 @@ export default function CataloguePage() {
     fontSize: '14px',
     outline: 'none',
     transition: 'border-color 0.2s',
+    appearance: 'none',
+    WebkitAppearance: 'none',
+  };
+
+  const selectStyle = {
+    ...inputStyle,
+    cursor: 'pointer',
+    paddingRight: '32px',
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23d4af37' opacity='0.6' d='M1 1l5 5 5-5'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 12px center',
   };
 
   return (
@@ -128,6 +136,18 @@ export default function CataloguePage() {
       paddingBottom: '60px',
       position: 'relative',
     }}>
+
+      {/* Global style for select options */}
+      <style>{`
+        select option {
+          background-color: #1a0e04;
+          color: #e8d5b0;
+        }
+        select:focus {
+          border-color: rgba(212,175,100,0.5) !important;
+        }
+      `}</style>
+
       <div style={{
         position: 'fixed', inset: 0,
         background: 'rgba(8,5,2,0.68)',
@@ -175,7 +195,7 @@ export default function CataloguePage() {
           <select
             value={selectedGenre}
             onChange={e => updateParams({ genre: e.target.value })}
-            style={{ ...inputStyle, cursor: 'pointer' }}
+            style={selectStyle}
           >
             <option value="">All Genres</option>
             {genres.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
@@ -183,7 +203,7 @@ export default function CataloguePage() {
           <select
             value={minRating}
             onChange={e => updateParams({ minRating: e.target.value })}
-            style={{ ...inputStyle, cursor: 'pointer' }}
+            style={selectStyle}
           >
             <option value="">Any Rating</option>
             <option value="3">3+ Stars</option>
@@ -254,10 +274,7 @@ export default function CataloguePage() {
                   display: 'flex', alignItems: 'center', gap: '12px',
                   marginBottom: '20px',
                 }}>
-                  <div style={{
-                    flex: 1, height: '1px',
-                    background: 'rgba(212,175,100,0.12)',
-                  }} />
+                  <div style={{ flex: 1, height: '1px', background: 'rgba(212,175,100,0.12)' }} />
                   <p style={{
                     fontFamily: "'Lora', Georgia, serif",
                     fontSize: '12px', color: 'rgba(212,175,100,0.45)',
@@ -266,10 +283,7 @@ export default function CataloguePage() {
                   }}>
                     Also found via Google Books
                   </p>
-                  <div style={{
-                    flex: 1, height: '1px',
-                    background: 'rgba(212,175,100,0.12)',
-                  }} />
+                  <div style={{ flex: 1, height: '1px', background: 'rgba(212,175,100,0.12)' }} />
                 </div>
 
                 <div style={{
@@ -290,7 +304,6 @@ export default function CataloguePage() {
                         opacity: importingId && importingId !== book.google_books_id ? 0.5 : 1,
                       }}
                     >
-                      {/* Cover */}
                       <div style={{
                         width: '100%', aspectRatio: '2/3',
                         borderRadius: '6px', overflow: 'hidden',
@@ -335,7 +348,6 @@ export default function CataloguePage() {
                         )}
                       </div>
 
-                      {/* Title */}
                       <p style={{
                         fontFamily: "'Lora', Georgia, serif",
                         fontSize: '13px', color: 'rgba(232,213,176,0.85)',
@@ -346,19 +358,14 @@ export default function CataloguePage() {
                       }}>
                         {book.title}
                       </p>
-
-                      {/* Author */}
                       <p style={{
                         fontFamily: "'Lora', Georgia, serif",
                         fontSize: '11px', color: 'rgba(212,175,100,0.5)',
                         margin: '0 0 3px 0', fontStyle: 'italic',
-                        overflow: 'hidden', textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                       }}>
                         {(book.authors || []).join(', ')}
                       </p>
-
-                      {/* Year */}
                       {book.publication_year && (
                         <p style={{
                           fontFamily: "'Lora', Georgia, serif",
@@ -374,7 +381,7 @@ export default function CataloguePage() {
               </div>
             )}
 
-            {/* Pagination — only when not searching */}
+            {/* Pagination */}
             {!isSearching && pagination.totalPages > 1 && (
               <div style={{
                 display: 'flex', justifyContent: 'center',
