@@ -483,7 +483,7 @@ export default function BookDetailPage() {
               {book.page_count && <span>{book.page_count} pages</span>}
             </div>
 
-            <div style={{ ...cardStyle, flex: 1 }}>
+            <div style={{ ...cardStyle }}>
               <h2 style={{
                 fontFamily: "'Playfair Display', Georgia, serif",
                 fontSize: '18px', fontWeight: '600',

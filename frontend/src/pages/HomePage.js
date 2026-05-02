@@ -16,6 +16,31 @@ function hasGoodCover(url) {
   return url && (url.includes('books.google') || url.includes('openlibrary'));
 }
 
+async function lookupAndSaveCover(book, setCoverUrl) {
+  if (hasGoodCover(book.cover_image_url)) {
+    setCoverUrl(book.cover_image_url);
+    return;
+  }
+  if (!book.title) return;
+  try {
+    const author = (book.authors || []).join(', ');
+    const res = await fetch(
+      `http://localhost:3001/api/books/cover-lookup?title=${encodeURIComponent(book.title)}&author=${encodeURIComponent(author)}`
+    );
+    const data = await res.json();
+    if (data.cover_image_url) {
+      setCoverUrl(data.cover_image_url);
+      if (book.id) {
+        fetch(`http://localhost:3001/api/books/${book.id}/cover`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cover_image_url: data.cover_image_url }),
+        }).catch(() => {});
+      }
+    }
+  } catch (e) {}
+}
+
 export default function HomePage() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
@@ -27,16 +52,17 @@ export default function HomePage() {
   const [loadingBow, setLoadingBow] = useState(true);
   const [addedToList, setAddedToList] = useState(false);
   const [nextAdded, setNextAdded] = useState(false);
+  const [nextReadCover, setNextReadCover] = useState(null);
+  const [bowCover, setBowCover] = useState(null);
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    // SQL v2 recommendations — top result becomes "What to Read Next"
     apiCall('GET', '/recommendations/sql-v2', null, token)
       .then(data => {
         const recs = data.recommendations || [];
         if (recs.length > 0) {
           setNextRead(recs[0]);
-          setSqlRecs(recs.slice(1)); // rest go in the carousel
+          setSqlRecs(recs.slice(1));
         }
       })
       .catch(console.error)
@@ -57,6 +83,15 @@ export default function HomePage() {
       .catch(console.error)
       .finally(() => setLoadingBow(false));
   }, [token]);
+
+  // Fetch covers for featured cards once the books load
+  useEffect(() => {
+    if (nextRead) lookupAndSaveCover(nextRead, setNextReadCover);
+  }, [nextRead]);
+
+  useEffect(() => {
+    if (bookOfWeek) lookupAndSaveCover(bookOfWeek, setBowCover);
+  }, [bookOfWeek]);
 
   useEffect(() => {
     if (sqlRecs.length === 0) return;
@@ -161,7 +196,7 @@ export default function HomePage() {
     </div>
   );
 
-  const FeaturedCard = ({ book, tag, onView, onAdd, added }) => (
+  const FeaturedCard = ({ book, coverUrl, tag, onView, onAdd, added }) => (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '48px', maxWidth: '900px' }}>
       <div
         onClick={onView}
@@ -174,13 +209,13 @@ export default function HomePage() {
         onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
       >
         <div style={{
-          width: '200px', minHeight: '300px',
+          width: '200px', height: '300px',
           borderRadius: '8px', overflow: 'hidden',
           border: '1px solid rgba(212,175,100,0.25)',
         }}>
-          {hasGoodCover(book.cover_image_url) ? (
+          {hasGoodCover(coverUrl) ? (
             <img
-              src={book.cover_image_url}
+              src={coverUrl}
               alt={book.title}
               style={{
                 width: '100%', height: '100%', objectFit: 'cover',
@@ -249,7 +284,6 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Genre tags */}
         {(book.genres || []).length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '20px' }}>
             {(book.genres || []).slice(0, 4).map(g => (
@@ -349,7 +383,6 @@ export default function HomePage() {
         zIndex: 0, pointerEvents: 'none',
       }} />
 
-      {/* Page header */}
       <div style={{
         position: 'relative', zIndex: 1,
         borderBottom: '1px solid rgba(212,175,100,0.12)',
@@ -374,12 +407,8 @@ export default function HomePage() {
 
       <div style={{ position: 'relative', zIndex: 1, padding: '0 48px' }}>
 
-        {/* ── What to Read Next ── */}
         <section style={{ paddingTop: '52px', marginBottom: '60px' }}>
-          {sectionTitle(
-            'Your Next Read',
-            'Picked for you based on your reading history'
-          )}
+          {sectionTitle('Your Next Read', 'Picked for you based on your reading history')}
           {loadingNext ? (
             <div style={{ display: 'flex', gap: '48px', maxWidth: '900px' }}>
               {shimmer(200, 300)}
@@ -388,6 +417,7 @@ export default function HomePage() {
           ) : nextRead ? (
             <FeaturedCard
               book={nextRead}
+              coverUrl={nextReadCover}
               tag="Recommended for you"
               onView={() => navigate(`/books/${nextRead.id}`)}
               onAdd={() => handleAddToList(nextRead.id, setNextAdded)}
@@ -404,7 +434,6 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* ── Recommended For You carousel ── */}
         <section style={{ marginBottom: '60px' }}>
           <div style={{
             display: 'flex', alignItems: 'center',
@@ -453,12 +482,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Book of the Week ── */}
         <section style={{ marginBottom: '52px' }}>
           {sectionTitle('Book of the Week', 'A handpicked read to discover this week')}
           {!loadingBow && bookOfWeek && (
             <FeaturedCard
               book={bookOfWeek}
+              coverUrl={bowCover}
               tag="Featured this week"
               onView={() => navigate(`/books/${bookOfWeek.id}`)}
               onAdd={() => handleAddToList(bookOfWeek.id, setAddedToList)}
