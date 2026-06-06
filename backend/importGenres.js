@@ -6,7 +6,7 @@ const path = require("path");
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
-// Map each genre to keywords that might appear in messy tags
+
 const GENRE_KEYWORDS = {
   1:  { name: 'Fantasy',          keywords: ['fantasy', 'magic', 'wizard', 'witch', 'dragon', 'fae', 'fairy', 'mytholog'] },
   2:  { name: 'Science Fiction',  keywords: ['science-fiction', 'sci-fi', 'scifi', 'space', 'dystopia', 'cyberpunk', 'alien', 'futur'] },
@@ -53,7 +53,7 @@ async function importGenres() {
     process.exit(1);
   }
 
-  // Parse tags.csv — build a map of tag_id -> genre_ids
+  
   const tagsContent = fs.readFileSync(tagsPath, 'utf8');
   const tags = parse(tagsContent, { columns: true, skip_empty_lines: true, trim: true });
 
@@ -70,13 +70,13 @@ async function importGenres() {
   }
   console.log(`Mapped ${mappedTags} tags to genres`);
 
-  // Parse book_tags.csv
+
   const bookTagsContent = fs.readFileSync(bookTagsPath, 'utf8');
   const bookTags = parse(bookTagsContent, { columns: true, skip_empty_lines: true, trim: true });
 
   console.log(`Found ${bookTags.length} book-tag entries in book_tags.csv`);
 
-  // Build a map of goodbooks_id -> set of genre_ids
+
   const bookGenreMap = {};
   for (const bt of bookTags) {
     const goodbooksId = parseInt(bt.goodreads_book_id);
@@ -97,7 +97,7 @@ async function importGenres() {
   let skipped = 0;
 
   try {
-    // Get all books with their goodbooks_id
+  
     const booksResult = await client.query('SELECT id, goodbooks_id FROM books');
     const books = booksResult.rows;
 

@@ -116,7 +116,7 @@ export default function StatsPage() {
     );
   };
 
-  // Use a single warm amber for the bar chart — vintage ink feel
+  
   const barColor = '#b8905a';
 
   return (
@@ -165,10 +165,10 @@ export default function StatsPage() {
           marginBottom: '32px',
         }}>
           {[
-            { label: 'Books Read', value: stats.totalBooksRead, icon: '✓' },
-            { label: 'Pages Read', value: stats.totalPagesRead?.toLocaleString() || 0, icon: '📄' },
-            { label: 'Books This Month', value: booksThisMonth, icon: '📅' },
-            { label: 'Active Months', value: activeMonths, icon: '📆' },
+            { label: 'Books Read', value: stats.totalBooksRead },
+            { label: 'Pages Read', value: stats.totalPagesRead?.toLocaleString() || 0 },
+            { label: 'Books This Month', value: booksThisMonth },
+            { label: 'Active Months', value: activeMonths},
           ].map(card => (
             <div key={card.label} style={{
               ...cardStyle,

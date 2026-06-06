@@ -64,7 +64,7 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
   }
   try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    const result = await pool.query('SELECT id, email, username, password_hash FROM users WHERE email = $1', [email.toLowerCase()]);
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -94,7 +94,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// PATCH /api/auth/username — change username
+
 router.patch('/username', authenticate, async (req, res) => {
   const userId = req.user.userId;
   const { username } = req.body;
@@ -126,7 +126,7 @@ router.patch('/username', authenticate, async (req, res) => {
   }
 });
 
-// PATCH /api/auth/password — change password
+
 router.patch('/password', authenticate, async (req, res) => {
   const userId = req.user.userId;
   const { currentPassword, newPassword } = req.body;
@@ -152,7 +152,7 @@ router.patch('/password', authenticate, async (req, res) => {
   }
 });
 
-// DELETE /api/auth/account — delete account
+
 router.delete('/account', authenticate, async (req, res) => {
   const userId = req.user.userId;
   const { password } = req.body;

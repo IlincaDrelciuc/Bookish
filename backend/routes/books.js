@@ -9,7 +9,7 @@ const pool = new Pool({
 
 const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
 
-// ── Helper: fetch from Google Books API ──
+
 async function searchGoogleBooks(query) {
   try {
     const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=10&printType=books&key=${GOOGLE_BOOKS_API_KEY}`;
@@ -33,7 +33,7 @@ async function searchGoogleBooks(query) {
           : null,
         page_count: info.pageCount || null,
         synopsis: info.description || null,
-        source: 'google', // flag so frontend knows it's not in DB yet
+        source: 'google', 
       };
     });
   } catch (err) {
@@ -42,7 +42,7 @@ async function searchGoogleBooks(query) {
   }
 }
 
-// ── GET /api/books ── (unchanged)
+
 router.get('/', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 24;
@@ -84,7 +84,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// ── GET /api/books/search ── (local only, unchanged)
+
 router.get('/search', async (req, res) => {
   const { query, genre, minRating, yearFrom, yearTo } = req.query;
   const limit = parseInt(req.query.limit) || 40;
@@ -145,13 +145,12 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// ── GET /api/books/search/combined ── (local + Google Books)
+
 router.get('/search/combined', async (req, res) => {
   const { query } = req.query;
   if (!query || !query.trim()) return res.json({ local: [], google: [] });
 
   try {
-    // Run both searches in parallel
     const [localResult, googleResults] = await Promise.all([
       pool.query(
         `SELECT DISTINCT
@@ -173,7 +172,7 @@ router.get('/search/combined', async (req, res) => {
       searchGoogleBooks(query),
     ]);
 
-    // Filter out Google results that are already in local DB by title match
+
     const localTitles = new Set(
       localResult.rows.map(b => b.title.toLowerCase().trim())
     );
@@ -191,14 +190,13 @@ router.get('/search/combined', async (req, res) => {
   }
 });
 
-// ── POST /api/books/import ── (save a Google Books result into DB)
+
 router.post('/import', async (req, res) => {
   const { google_books_id, title, authors, genres, cover_image_url,
           average_rating, ratings_count, publication_year,
           page_count, synopsis } = req.body;
 
   try {
-    // Check if already imported by google_books_id or title
     const existing = await pool.query(
       'SELECT id FROM books WHERE google_books_id = $1 OR title = $2',
       [google_books_id, title]
@@ -207,7 +205,7 @@ router.post('/import', async (req, res) => {
       return res.json({ id: existing.rows[0].id, alreadyExisted: true });
     }
 
-    // Insert the book
+
     const bookResult = await pool.query(
       `INSERT INTO books
         (title, cover_image_url, average_rating, ratings_count,
@@ -219,7 +217,7 @@ router.post('/import', async (req, res) => {
     );
     const bookId = bookResult.rows[0].id;
 
-    // Insert authors
+
     for (const authorName of (authors || [])) {
       let authorResult = await pool.query(
         'SELECT id FROM authors WHERE name = $1', [authorName]
@@ -236,9 +234,9 @@ router.post('/import', async (req, res) => {
       );
     }
 
-    // Insert genres
+
     for (const genreName of (genres || [])) {
-      const cleanGenre = genreName.split('/')[0].trim(); // Google uses "Fiction / Fantasy" etc
+      const cleanGenre = genreName.split('/')[0].trim(); 
       if (!cleanGenre) continue;
       let genreResult = await pool.query(
         'SELECT id FROM genres WHERE name = $1', [cleanGenre]
@@ -262,7 +260,7 @@ router.post('/import', async (req, res) => {
   }
 });
 
-// ── GET /api/books/cover-lookup ── (unchanged)
+
 router.get('/cover-lookup', async (req, res) => {
   const { title, author } = req.query;
   try {
@@ -295,7 +293,7 @@ router.get('/cover-lookup', async (req, res) => {
   }
 });
 
-// ── GET /api/books/:id ── (unchanged)
+
 router.get('/:id', async (req, res) => {
   const bookId = parseInt(req.params.id);
   if (isNaN(bookId)) return res.status(400).json({ error: 'Invalid book ID' });

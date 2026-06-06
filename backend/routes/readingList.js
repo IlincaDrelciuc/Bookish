@@ -8,7 +8,7 @@ const pool = new Pool({
     'postgresql://postgres:bookish2025@localhost:5432/bookish',
 });
 
-// POST /api/reading-list — add or update a book in the list
+
 router.post('/', authenticate, async (req, res) => {
   const userId = req.user.userId;
   const { bookId, status } = req.body;
@@ -45,7 +45,7 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
-// GET /api/reading-list — get all books in the user's list
+
 router.get('/', authenticate, async (req, res) => {
   const userId = req.user.userId;
   try {
@@ -75,7 +75,7 @@ router.get('/', authenticate, async (req, res) => {
   }
 });
 
-// PATCH /api/reading-list/:bookId — update status or progress
+
 router.patch('/:bookId', authenticate, async (req, res) => {
   const userId = req.user.userId;
   const bookId = parseInt(req.params.bookId);

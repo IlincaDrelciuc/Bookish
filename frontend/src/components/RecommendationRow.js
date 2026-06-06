@@ -78,7 +78,7 @@ export default function RecommendationRow({ title, subtitle, books, loading, err
             ))}
           </div>
         ) : (
-          // Horizontal scrolling layout for SQL recommendations
+          
           <div style={{
             display: 'flex',
             gap: '16px',

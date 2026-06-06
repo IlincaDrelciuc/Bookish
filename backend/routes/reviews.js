@@ -7,7 +7,7 @@ const pool = new Pool({
     'postgresql://postgres:bookish2025@localhost:5432/bookish',
 });
 
-// POST /api/reviews — submit or update a review
+
 router.post('/', authenticate, async (req, res) => {
   const userId = req.user.userId;
   const { bookId, body, score } = req.body;
@@ -38,7 +38,7 @@ router.post('/', authenticate, async (req, res) => {
   }
 });
 
-// POST /api/reviews/rate — save a star rating without a review body
+
 router.post('/rate', authenticate, async (req, res) => {
   const userId = req.user.userId;
   const { bookId, score } = req.body;

@@ -193,7 +193,6 @@ router.get('/gemini', authenticate, async (req, res) => {
     );
 
     if (cacheResult.rows.length > 0) {
-      console.log(`Returning cached Gemini recommendations for user ${userId}`);
       return res.json({
         recommendations: cacheResult.rows[0].recommendations,
         algorithm: 'gemini',
@@ -264,14 +263,8 @@ OUTPUT FORMAT:
 Return ONLY a valid JSON array. No markdown, no backticks, no preamble, no explanation.
 [{"title": "Book Name", "author": "Author Name", "reason": "one sentence reason"}]`;
 
-    console.log(`Calling Gemini for user ${userId}...`);
-    const startTime = Date.now();
-
     const geminiResult = await geminiModel.generateContent(prompt);
     const rawText = geminiResult.response.text();
-    const elapsedMs = Date.now() - startTime;
-
-    console.log(`Gemini responded in ${elapsedMs}ms`);
 
     let recommendations;
     try {
@@ -299,7 +292,6 @@ Return ONLY a valid JSON array. No markdown, no backticks, no preamble, no expla
       recommendations,
       algorithm: 'gemini',
       cached: false,
-      responseTimeMs: elapsedMs,
       note: 'AI-generated recommendations with personalised explanations',
     });
 

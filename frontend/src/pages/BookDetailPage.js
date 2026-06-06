@@ -139,7 +139,7 @@ export default function BookDetailPage() {
     },
     {
       status: 'reading',
-      label: readingStatus === 'reading' ? '📖 Currently Reading' : '📖 Reading Now',
+      label: readingStatus === 'reading' ? ' Currently Reading' : ' Reading Now',
       active: readingStatus === 'reading',
     },
     {

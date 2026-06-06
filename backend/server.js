@@ -132,7 +132,7 @@ app.use('/api/reviews', reviewRoutes);
 
 const PORT = process.env.PORT || 3001;
 
-// GET /api/books/:id/similar
+
 app.get('/api/books/:id/similar', async (req, res) => {
   const bookId = parseInt(req.params.id);
   try {

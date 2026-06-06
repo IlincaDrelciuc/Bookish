@@ -66,19 +66,17 @@ async function runEvaluation() {
   });
   console.log(`Loaded ${records.length} ratings.`);
 
-  // Check how many books exist with IDs in the ratings range
+
   const maxBookId = await pool.query('SELECT MAX(id) FROM books');
   console.log(`Max internal book ID in database: ${maxBookId.rows[0].max}`);
 
-  // Build user ratings using internal book ID directly
-  // ratings.csv book_id should be 1-10000 matching internal IDs
+
   const userRatings = {};
   let matched = 0;
   let unmatched = 0;
 
   for (const r of records) {
     const bookId = parseInt(r.book_id);
-    // Only use book IDs that exist in our range
     if (bookId < 1 || bookId > 10000) { unmatched++; continue; }
     matched++;
     const uid = r.user_id;

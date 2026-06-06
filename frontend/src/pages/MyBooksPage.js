@@ -12,6 +12,7 @@ export default function MyBooksPage() {
   const [books, setBooks] = useState({ 'to-read': [], 'reading': [], 'finished': [] });
   const [activeTab, setActiveTab] = useState('reading');
   const [loading, setLoading] = useState(true);
+  const [ratingPrompt, setRatingPrompt] = useState(null); // { bookId, title }
   const { token } = useAuth();
   const navigate = useNavigate();
 
@@ -22,11 +23,16 @@ export default function MyBooksPage() {
       .finally(() => setLoading(false));
   }, [token]);
 
-  async function updateStatus(bookId, newStatus) {
+  async function updateStatus(bookId, newStatus, currentRating) {
     try {
       await apiCall('PATCH', `/reading-list/${bookId}`, { status: newStatus }, token);
       const updated = await apiCall('GET', '/reading-list', null, token);
       setBooks(updated);
+      if (newStatus === 'finished' && !currentRating) {
+        const book = books['reading'].find(b => b.book_id === bookId)
+          || books['to-read'].find(b => b.book_id === bookId);
+        setRatingPrompt({ bookId, title: book?.title || 'this book' });
+      }
     } catch (err) { console.error(err); }
   }
 
@@ -43,6 +49,7 @@ export default function MyBooksPage() {
       await apiCall('POST', '/reviews/rate', { bookId, score }, token);
       const updated = await apiCall('GET', '/reading-list', null, token);
       setBooks(updated);
+      setRatingPrompt(null);
     } catch (err) { console.error(err); }
   }
 
@@ -87,6 +94,76 @@ export default function MyBooksPage() {
         zIndex: 0, pointerEvents: 'none',
       }} />
 
+      {/* Rating popup */}
+      {ratingPrompt && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.7)',
+          zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{
+            background: 'rgba(20,12,4,0.97)',
+            border: '1px solid rgba(212,175,100,0.25)',
+            borderRadius: '10px',
+            padding: '36px 40px',
+            maxWidth: '380px', width: '90%',
+            textAlign: 'center',
+            backdropFilter: 'blur(16px)',
+          }}>
+            <p style={{
+              fontFamily: "'Lora', Georgia, serif",
+              fontSize: '12px', color: 'rgba(212,175,100,0.5)',
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              margin: '0 0 10px 0',
+            }}>You finished</p>
+            <p style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: '18px', color: '#f0e0c0',
+              margin: '0 0 6px 0', fontWeight: '600',
+            }}>{ratingPrompt.title}</p>
+            <p style={{
+              fontFamily: "'Lora', Georgia, serif",
+              fontSize: '13px', color: 'rgba(212,175,100,0.5)',
+              fontStyle: 'italic', margin: '0 0 24px 0',
+            }}>How would you rate it?</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginBottom: '20px' }}>
+              {[1, 2, 3, 4, 5].map(n => (
+                <button
+                  key={n}
+                  onClick={() => rateBook(ratingPrompt.bookId, n)}
+                  style={{
+                    background: 'none', border: 'none',
+                    cursor: 'pointer', fontSize: '32px',
+                    color: 'rgba(212,175,100,0.3)',
+                    transition: 'color 0.15s, transform 0.1s',
+                    padding: '0 2px',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.color = '#d4af37';
+                    e.currentTarget.style.transform = 'scale(1.2)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.color = 'rgba(212,175,100,0.3)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >★</button>
+              ))}
+            </div>
+            <button
+              onClick={() => setRatingPrompt(null)}
+              style={{
+                background: 'none', border: 'none',
+                color: 'rgba(212,175,100,0.4)',
+                fontFamily: "'Lora', Georgia, serif",
+                fontSize: '12px', cursor: 'pointer',
+                textDecoration: 'underline', letterSpacing: '0.04em',
+              }}
+            >Skip for now</button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{
         position: 'relative', zIndex: 1,
@@ -111,12 +188,11 @@ export default function MyBooksPage() {
 
         <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
           {[
-            { value: totalFinished, label: totalFinished === 1 ? 'book finished' : 'books finished', icon: '✓' },
-            { value: totalReading, label: totalReading === 1 ? 'book in progress' : 'books in progress', icon: '📖' },
-            { value: totalToRead, label: totalToRead === 1 ? 'book on wishlist' : 'books on wishlist', icon: '♡' },
-          ].map(({ value, label, icon }) => (
+            { value: totalFinished, label: totalFinished === 1 ? 'book finished' : 'books finished' },
+            { value: totalReading, label: totalReading === 1 ? 'book in progress' : 'books in progress' },
+            { value: totalToRead, label: totalToRead === 1 ? 'book on wishlist' : 'books on wishlist' },
+          ].map(({ value, label }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', color: 'rgba(212,175,100,0.4)' }}>{icon}</span>
               <span style={{
                 fontFamily: "'Playfair Display', Georgia, serif",
                 fontSize: '15px', fontWeight: '600', color: '#d4af37',
@@ -195,7 +271,7 @@ export default function MyBooksPage() {
                 item={item}
                 activeTab={activeTab}
                 onNavigate={id => navigate(`/books/${id}`)}
-                onUpdateStatus={updateStatus}
+                onUpdateStatus={(bookId, newStatus) => updateStatus(bookId, newStatus, item.user_rating)}
                 onUpdateProgress={updateProgress}
                 onRate={rateBook}
               />
@@ -212,7 +288,6 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
   const [pageInput, setPageInput] = useState(item.current_page || '');
   const userRating = item.user_rating || 0;
 
-  // Keep pageInput in sync if item updates
   useEffect(() => {
     setPageInput(item.current_page || '');
   }, [item.current_page]);
@@ -270,7 +345,6 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
       {/* Info */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div>
-          {/* Title + finished badge */}
           <div style={{
             display: 'flex', alignItems: 'flex-start',
             justifyContent: 'space-between', gap: '12px', marginBottom: '4px',
@@ -293,12 +367,11 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
                 fontStyle: 'italic', fontFamily: "'Lora', Georgia, serif",
                 whiteSpace: 'nowrap',
               }}>
-                ✓ Finished {new Date(item.finish_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
+                Finished {new Date(item.finish_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}
               </span>
             )}
           </div>
 
-          {/* Author */}
           <p style={{
             fontFamily: "'Lora', Georgia, serif",
             fontSize: '13px', color: 'rgba(212,175,100,0.6)',
@@ -307,7 +380,6 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
             {(item.authors || []).join(', ')}
           </p>
 
-          {/* Meta row */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: '16px',
             flexWrap: 'wrap', marginBottom: '12px',
@@ -336,7 +408,6 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
             )}
           </div>
 
-          {/* My Rating */}
           <div style={{ marginBottom: '14px' }}>
             <p style={{
               fontFamily: "'Lora', Georgia, serif",
@@ -375,7 +446,6 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
             </div>
           </div>
 
-          {/* Progress bar */}
           {activeTab === 'reading' && item.page_count && (
             <div style={{ marginBottom: '12px' }}>
               <div style={{
@@ -425,7 +495,6 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
           )}
         </div>
 
-        {/* Action buttons */}
         {activeTab !== 'finished' && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {activeTab === 'to-read' && (
@@ -484,7 +553,6 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
           </div>
         )}
 
-        {/* Start date */}
         {activeTab === 'reading' && item.start_date && (
           <div style={{
             fontSize: '11px', color: 'rgba(212,175,100,0.35)',
