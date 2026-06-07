@@ -65,7 +65,6 @@ export default function RecommendationRow({ title, subtitle, books, loading, err
 
       {!loading && !error && books.length > 0 && (
         geminiMode ? (
-          // Vertical stacked layout for AI recommendations
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {books.map((book, i) => (
               <RecommendationCard

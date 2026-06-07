@@ -43,42 +43,26 @@ Built as a B.Sc. Computer Science bachelor's thesis at the Academy of Economic S
 
 ## Setup
 
-### 1. Clone the repository
-
-git clone https://github.com/YOURUSERNAME/bookish.git
+### 1. Clone the repositorygit clone https://github.com/YOURUSERNAME/bookish.git
 cd bookish
 
 ### 2. Set up the database
 
-Open pgAdmin, create a database called bookish, then run:
+Open pgAdmin, create a database called `bookish`, then run:psql -U postgres -d bookish -f database/schema.sql
 
-psql -U postgres -d bookish -f database/schema.sql
-
-### 3. Set up the backend
-
-cd backend
+### 3. Set up the backendcd backend
 npm install
 
-Create a .env file inside the backend folder:
-
-DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/bookish
+Create a `.env` file inside the `backend` folder:DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/bookish
 JWT_SECRET=your_secret_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
 GOOGLE_BOOKS_API_KEY=your_google_books_api_key_here
 
-Import the book data (run once):
-
-node importData.js
-
-Start the server:
-
-node server.js
+Start the server:node server.js
 
 Backend runs on http://localhost:3001
 
-### 4. Set up the frontend
-
-cd ../frontend
+### 4. Set up the frontendcd ../frontend
 npm install
 npm start
 
@@ -86,9 +70,7 @@ Frontend runs on http://localhost:3000
 
 ---
 
-## Project Structure
-
-bookish/
+## Project Structurebookish/
 ├── backend/
 │   ├── server.js
 │   ├── middleware/auth.js
@@ -105,28 +87,14 @@ bookish/
 │       ├── contexts/
 │       ├── pages/
 │       └── utils/
-├── database/
-│   └── schema.sql
-├── evaluation/
-│   └── evaluate.js
-└── docs/
-    ├── ai-usage.md
-    └── evaluation-summary.md
-
----
-
-## Offline Evaluation
-
-To compute Hit@10 scores for both recommendation variants:
-
-cd evaluation
-node evaluate.js
+└── database/
+└── schema.sql
 
 ---
 
 ## User Study Results
 
-Mean SUS score: 94.75 (SD = 5.71, range = 85-100)
+Mean SUS score: 94.75 (SD = 5.71, range = 85–100)
 Classification: Best Imaginable (Bangor et al., 2008)
 6/10 participants found Handpicked by AI more personalised than Quick Picks
 9/10 participants found AI explanations at least somewhat helpful

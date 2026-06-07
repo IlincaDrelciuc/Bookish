@@ -103,7 +103,6 @@ app.post('/api/synopsis', authenticate, async (req, res) => {
       }
     );
     const data = await response.json();
-    console.log('Gemini response:', JSON.stringify(data, null, 2));
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     res.json({ synopsis: text });
   } catch (err) {
@@ -131,7 +130,6 @@ const reviewRoutes = require('./routes/reviews');
 app.use('/api/reviews', reviewRoutes);
 
 const PORT = process.env.PORT || 3001;
-
 
 app.get('/api/books/:id/similar', async (req, res) => {
   const bookId = parseInt(req.params.id);
@@ -198,12 +196,12 @@ app.get('/api/profile/:username', async (req, res) => {
     );
 
     const currentlyReadingResult = await pool.query(
-  `SELECT b.id, b.title, b.cover_image_url, b.page_count, rl.current_page AS progress
-   FROM reading_list rl JOIN books b ON rl.book_id = b.id
-   WHERE rl.user_id = $1 AND rl.status = 'reading'
-   ORDER BY rl.added_at DESC`,
-  [user.id]
-);
+      `SELECT b.id, b.title, b.cover_image_url, b.page_count, rl.current_page AS progress
+       FROM reading_list rl JOIN books b ON rl.book_id = b.id
+       WHERE rl.user_id = $1 AND rl.status = 'reading'
+       ORDER BY rl.added_at DESC`,
+      [user.id]
+    );
 
     const recentResult = await pool.query(
       `SELECT b.id, b.title, b.cover_image_url
@@ -249,20 +247,6 @@ app.get('/api/profile/:username', async (req, res) => {
   } catch (error) {
     console.error('Profile error:', error.message);
     res.status(500).json({ error: 'Failed to fetch profile' });
-  }
-});
-
-app.patch('/api/books/:id/cover', async (req, res) => {
-  const bookId = parseInt(req.params.id);
-  const { cover_image_url } = req.body;
-  try {
-    await pool.query(
-      'UPDATE books SET cover_image_url = $1 WHERE id = $2',
-      [cover_image_url, bookId]
-    );
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update cover' });
   }
 });
 

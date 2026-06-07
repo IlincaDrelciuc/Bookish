@@ -89,7 +89,6 @@ export default function ProfilePage() {
     }}>
       {overlayBg}
 
-      {/* Header bar */}
       <div style={{
         position: 'relative', zIndex: 1,
         borderBottom: '1px solid rgba(212,175,100,0.12)',
@@ -104,15 +103,12 @@ export default function ProfilePage() {
         }}>Reader Profile</p>
       </div>
 
-      {/* Centered content wrapper */}
       <div style={{
         position: 'relative', zIndex: 1,
         maxWidth: '860px',
         margin: '0 auto',
         padding: '48px 24px',
       }}>
-
-        {/* ── Profile header ── */}
         <div style={{
           ...cardStyle,
           display: 'flex',
@@ -123,7 +119,6 @@ export default function ProfilePage() {
           marginBottom: '32px',
           padding: '40px 28px',
         }}>
-          {/* Avatar */}
           <div style={{
             width: '80px', height: '80px', borderRadius: '50%',
             background: 'linear-gradient(135deg, #7a4f0d 0%, #4e3008 100%)',
@@ -171,7 +166,6 @@ export default function ProfilePage() {
               Member since {memberSince}
             </p>
 
-            {/* Favourite genres */}
             {profile.favouriteGenres.length > 0 && (
               <div style={{
                 display: 'flex', flexWrap: 'wrap',
@@ -192,7 +186,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Stats grid ── */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
@@ -200,11 +193,11 @@ export default function ProfilePage() {
           marginBottom: '40px',
         }}>
           {[
-            { label: 'Books Read',    value: profile.stats.finished },
-            { label: 'Reading Now',   value: profile.stats.reading },
-            { label: 'Want to Read',  value: profile.stats.to_read },
-            { label: 'Reviews',       value: profile.stats.reviewCount },
-            { label: 'Ratings',       value: profile.stats.ratingCount },
+            { label: 'Books Read',   value: profile.stats.finished },
+            { label: 'Reading Now',  value: profile.stats.reading },
+            { label: 'Want to Read', value: profile.stats.to_read },
+            { label: 'Reviews',      value: profile.stats.reviewCount },
+            { label: 'Ratings',      value: profile.stats.ratingCount },
           ].map(s => (
             <div key={s.label} style={{ ...cardStyle, textAlign: 'center', padding: '24px 12px' }}>
               <div style={{
@@ -221,7 +214,6 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* ── Currently reading ── */}
         {profile.currentlyReading.length > 0 && (
           <div style={{ marginBottom: '40px' }}>
             <h2 style={{
@@ -316,7 +308,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Recently finished ── */}
         {profile.recentlyFinished.length > 0 && (
           <div style={{ marginBottom: '40px' }}>
             <h2 style={{
@@ -386,7 +377,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Recent reviews ── */}
         {profile.recentReviews.length > 0 && (
           <div>
             <h2 style={{
@@ -441,7 +431,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Empty state ── */}
         {profile.recentlyFinished.length === 0 &&
          profile.recentReviews.length === 0 &&
          profile.currentlyReading.length === 0 && (

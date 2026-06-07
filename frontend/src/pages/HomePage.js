@@ -30,13 +30,6 @@ async function lookupAndSaveCover(book, setCoverUrl) {
     const data = await res.json();
     if (data.cover_image_url) {
       setCoverUrl(data.cover_image_url);
-      if (book.id) {
-        fetch(`http://localhost:3001/api/books/${book.id}/cover`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cover_image_url: data.cover_image_url }),
-        }).catch(() => {});
-      }
     }
   } catch (e) {}
 }
@@ -84,7 +77,6 @@ export default function HomePage() {
       .finally(() => setLoadingBow(false));
   }, [token]);
 
-  // Fetch covers for featured cards once the books load
   useEffect(() => {
     if (nextRead) lookupAndSaveCover(nextRead, setNextReadCover);
   }, [nextRead]);
@@ -406,7 +398,6 @@ export default function HomePage() {
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, padding: '0 48px' }}>
-
         <section style={{ paddingTop: '52px', marginBottom: '60px' }}>
           {sectionTitle('Your Next Read', 'Picked for you based on your reading history')}
           {loadingNext ? (
@@ -495,7 +486,6 @@ export default function HomePage() {
             />
           )}
         </section>
-
       </div>
     </div>
   );

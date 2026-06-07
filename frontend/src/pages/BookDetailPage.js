@@ -45,7 +45,7 @@ export default function BookDetailPage() {
     apiCall('GET', `/books/${id}/similar`)
       .then(setSimilarBooks)
       .catch(() => setSimilarBooks([]));
-}, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isLoggedIn || !token) return;
@@ -69,7 +69,6 @@ export default function BookDetailPage() {
       const data = await apiCall('POST', '/synopsis', { title, authors }, token);
       if (data.synopsis) setSynopsis(data.synopsis);
     } catch (err) {
-      console.error('Synopsis fetch failed:', err);
     } finally {
       setLoadingSynopsis(false);
     }
@@ -80,7 +79,6 @@ export default function BookDetailPage() {
     try {
       await apiCall('POST', '/reading-list', { bookId: parseInt(id), status }, token);
       setReadingStatus(status);
-      // Show rating prompt when finishing a book that hasn't been rated yet
       if (status === 'finished' && !myRating) {
         setShowRatingPrompt(true);
       }
@@ -193,7 +191,6 @@ export default function BookDetailPage() {
     }}>
       {overlayBg}
 
-      {/* ── Rating prompt popup ── */}
       {showRatingPrompt && (
         <div
           onClick={() => setShowRatingPrompt(false)}
@@ -237,7 +234,6 @@ export default function BookDetailPage() {
               fontStyle: 'italic', margin: '0 0 28px 0',
             }}>How would you rate it?</p>
 
-            {/* Stars */}
             <div style={{
               display: 'flex', justifyContent: 'center',
               gap: '6px', marginBottom: '28px',
@@ -301,8 +297,6 @@ export default function BookDetailPage() {
           marginBottom: '48px',
           alignItems: 'stretch', flexWrap: 'wrap',
         }}>
-
-          {/* Left column */}
           <div style={{
             flexShrink: 0, display: 'flex',
             flexDirection: 'column', gap: '16px', width: '220px',
@@ -370,7 +364,6 @@ export default function BookDetailPage() {
               ))}
             </div>
 
-            {/* My Rating */}
             {isLoggedIn && (
               <div style={{
                 ...cardStyle, padding: '16px',
@@ -411,7 +404,6 @@ export default function BookDetailPage() {
             )}
           </div>
 
-          {/* Right column */}
           <div style={{ flex: 1, minWidth: '280px', display: 'flex', flexDirection: 'column' }}>
             <h1 style={{
               fontFamily: "'Playfair Display', Georgia, serif",
@@ -507,7 +499,6 @@ export default function BookDetailPage() {
           </div>
         </div>
 
-        {/* Reviews */}
         <div style={{ maxWidth: '860px' }}>
           <h2 style={{
             fontFamily: "'Playfair Display', Georgia, serif",
@@ -610,7 +601,6 @@ export default function BookDetailPage() {
           </div>
         </div>
 
-        {/* Similar Books */}
         {similarBooks.length > 0 && (
           <div style={{ maxWidth: '860px', marginTop: '48px' }}>
             <h2 style={{

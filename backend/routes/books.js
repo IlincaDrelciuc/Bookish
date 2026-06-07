@@ -33,7 +33,7 @@ async function searchGoogleBooks(query) {
           : null,
         page_count: info.pageCount || null,
         synopsis: info.description || null,
-        source: 'google', 
+        source: 'google',
       };
     });
   } catch (err) {
@@ -172,7 +172,6 @@ router.get('/search/combined', async (req, res) => {
       searchGoogleBooks(query),
     ]);
 
-
     const localTitles = new Set(
       localResult.rows.map(b => b.title.toLowerCase().trim())
     );
@@ -205,7 +204,6 @@ router.post('/import', async (req, res) => {
       return res.json({ id: existing.rows[0].id, alreadyExisted: true });
     }
 
-
     const bookResult = await pool.query(
       `INSERT INTO books
         (title, cover_image_url, average_rating, ratings_count,
@@ -216,7 +214,6 @@ router.post('/import', async (req, res) => {
        publication_year, page_count, synopsis, google_books_id]
     );
     const bookId = bookResult.rows[0].id;
-
 
     for (const authorName of (authors || [])) {
       let authorResult = await pool.query(
@@ -234,9 +231,8 @@ router.post('/import', async (req, res) => {
       );
     }
 
-
     for (const genreName of (genres || [])) {
-      const cleanGenre = genreName.split('/')[0].trim(); 
+      const cleanGenre = genreName.split('/')[0].trim();
       if (!cleanGenre) continue;
       let genreResult = await pool.query(
         'SELECT id FROM genres WHERE name = $1', [cleanGenre]

@@ -58,7 +58,6 @@ export default function Navbar() {
           </Link>
         ))}
 
-        {/* Settings icon */}
         <Link
           to="/account"
           title="Account Settings"

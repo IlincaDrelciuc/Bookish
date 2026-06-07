@@ -37,7 +37,6 @@ export default function OnboardingPage() {
     );
   }
 
-  // Search both local DB and Google Books
   useEffect(() => {
     if (searchQuery.length < 2) { setSearchResults([]); return; }
     const timer = setTimeout(async () => {
@@ -71,7 +70,6 @@ export default function OnboardingPage() {
   async function handleFinish() {
     setLoading(true);
     try {
-      // Import any Google Books selections first
       const resolvedBooks = await Promise.all(
         selectedBooks.map(async book => {
           if (book._isGoogle) {
@@ -173,7 +171,6 @@ export default function OnboardingPage() {
         boxShadow: '0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(212,175,100,0.08)',
       }}>
 
-        {/* Progress bar */}
         <div style={{ display: 'flex', gap: '8px', marginBottom: '40px' }}>
           {[1, 2].map(s => (
             <div key={s} style={{
@@ -184,7 +181,6 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        {/* ── Step 1: Genres ── */}
         {step === 1 && (
           <div>
             <span style={{
@@ -247,7 +243,6 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* ── Step 2: Prior books ── */}
         {step === 2 && (
           <div>
             <span style={{
@@ -290,7 +285,6 @@ export default function OnboardingPage() {
               }}
             />
 
-            {/* Search results */}
             <div style={{ maxHeight: '280px', overflowY: 'auto', marginBottom: '16px' }}>
               {searchResults.map(book => {
                 const selected = !!selectedBooks.find(b => b.id === book.id);
@@ -307,7 +301,6 @@ export default function OnboardingPage() {
                       transition: 'all 0.15s', alignItems: 'center',
                     }}
                   >
-                    {/* Cover */}
                     <div style={{
                       width: '32px', height: '48px', flexShrink: 0,
                       borderRadius: '2px', overflow: 'hidden',
@@ -361,7 +354,6 @@ export default function OnboardingPage() {
               })}
             </div>
 
-            {/* Selected books summary */}
             {selectedBooks.length > 0 && (
               <div style={{ marginBottom: '20px' }}>
                 <span style={{

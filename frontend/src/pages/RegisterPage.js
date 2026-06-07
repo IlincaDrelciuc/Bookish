@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const LIBRARY_IMAGE = '/foto-register.webp';
 
@@ -159,6 +160,7 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const focusStyle = (e) => {
     e.target.style.borderColor = 'rgba(212,175,100,0.5)';
@@ -198,7 +200,7 @@ export default function RegisterPage() {
         const msg = data.errors?.[0]?.msg || data.error || 'Registration failed';
         setError(msg);
       } else {
-        localStorage.setItem('token', data.token);
+        login(data.user, data.token);
         navigate('/onboarding');
       }
     } catch {

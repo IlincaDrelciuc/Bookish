@@ -12,7 +12,7 @@ export default function MyBooksPage() {
   const [books, setBooks] = useState({ 'to-read': [], 'reading': [], 'finished': [] });
   const [activeTab, setActiveTab] = useState('reading');
   const [loading, setLoading] = useState(true);
-  const [ratingPrompt, setRatingPrompt] = useState(null); // { bookId, title }
+  const [ratingPrompt, setRatingPrompt] = useState(null);
   const { token } = useAuth();
   const navigate = useNavigate();
 
@@ -94,7 +94,6 @@ export default function MyBooksPage() {
         zIndex: 0, pointerEvents: 'none',
       }} />
 
-      {/* Rating popup */}
       {ratingPrompt && (
         <div style={{
           position: 'fixed', inset: 0,
@@ -164,7 +163,6 @@ export default function MyBooksPage() {
         </div>
       )}
 
-      {/* Header */}
       <div style={{
         position: 'relative', zIndex: 1,
         borderBottom: '1px solid rgba(212,175,100,0.12)',
@@ -207,8 +205,6 @@ export default function MyBooksPage() {
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, padding: '0 48px' }}>
-
-        {/* Tabs */}
         <div style={{
           display: 'flex',
           borderBottom: '1px solid rgba(212,175,100,0.12)',
@@ -241,7 +237,6 @@ export default function MyBooksPage() {
           ))}
         </div>
 
-        {/* Empty state */}
         {currentBooks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '80px 20px' }}>
             <div style={{
@@ -312,7 +307,6 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-      {/* Cover */}
       <div
         onClick={() => onNavigate(item.book_id)}
         style={{
@@ -342,7 +336,6 @@ function BookCard({ item, activeTab, onNavigate, onUpdateStatus, onUpdateProgres
         )}
       </div>
 
-      {/* Info */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
         <div>
           <div style={{

@@ -136,8 +136,6 @@ export default function CataloguePage() {
       paddingBottom: '60px',
       position: 'relative',
     }}>
-
-      {/* Global style for select options */}
       <style>{`
         select option {
           background-color: #1a0e04;
@@ -154,7 +152,6 @@ export default function CataloguePage() {
         zIndex: 0, pointerEvents: 'none',
       }} />
 
-      {/* Header */}
       <div style={{
         position: 'relative', zIndex: 1,
         borderBottom: '1px solid rgba(212,175,100,0.12)',
@@ -177,8 +174,6 @@ export default function CataloguePage() {
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, padding: '32px 48px 0' }}>
-
-        {/* Search and filter bar */}
         <div style={{
           display: 'flex', gap: '12px',
           marginBottom: '32px', flexWrap: 'wrap',
@@ -234,7 +229,6 @@ export default function CataloguePage() {
           </div>
         ) : (
           <>
-            {/* ── Local results ── */}
             {books.length > 0 && (
               <>
                 {isSearching && (
@@ -267,7 +261,6 @@ export default function CataloguePage() {
               </p>
             )}
 
-            {/* ── Google Books results ── */}
             {googleBooks.length > 0 && (
               <div style={{ marginBottom: '40px' }}>
                 <div style={{
@@ -381,7 +374,6 @@ export default function CataloguePage() {
               </div>
             )}
 
-            {/* Pagination */}
             {!isSearching && pagination.totalPages > 1 && (
               <div style={{
                 display: 'flex', justifyContent: 'center',

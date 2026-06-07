@@ -136,7 +136,6 @@ export default function AccountPage() {
     }}>
       {overlayBg}
 
-      {/* Header */}
       <div style={{
         position: 'relative', zIndex: 1,
         borderBottom: '1px solid rgba(212,175,100,0.12)',
@@ -161,7 +160,6 @@ export default function AccountPage() {
 
       <div style={{ position: 'relative', zIndex: 1, padding: '48px', maxWidth: '640px', margin: '0 auto' }}>
 
-        {/* Current details */}
         <div style={cardStyle}>
           <h2 style={{
             fontFamily: "'Playfair Display', Georgia, serif",
@@ -195,7 +193,6 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* Change username */}
         <div style={cardStyle}>
           <h2 style={{
             fontFamily: "'Playfair Display', Georgia, serif",
@@ -237,7 +234,6 @@ export default function AccountPage() {
           </button>
         </div>
 
-        {/* Change password */}
         <div style={cardStyle}>
           <h2 style={{
             fontFamily: "'Playfair Display', Georgia, serif",
@@ -297,7 +293,6 @@ export default function AccountPage() {
           </button>
         </div>
 
-        {/* Delete account */}
         <div style={{
           ...cardStyle,
           border: '1px solid rgba(180,60,60,0.2)',

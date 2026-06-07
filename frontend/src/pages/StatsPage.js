@@ -7,11 +7,11 @@ import {
 } from 'recharts';
 
 const COLOURS = [
-  '#c4965a', // warm amber
-  '#8b7355', // antique brown
-  '#a0836a', // dusty rose-brown
-  '#7a8c6e', // muted sage
-  '#6b7a8d', // slate blue-grey
+  '#c4965a',
+  '#8b7355',
+  '#a0836a',
+  '#7a8c6e',
+  '#6b7a8d',
 ];
 
 export default function StatsPage() {
@@ -116,9 +116,6 @@ export default function StatsPage() {
     );
   };
 
-  
-  const barColor = '#b8905a';
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -132,7 +129,6 @@ export default function StatsPage() {
     }}>
       {overlayBg}
 
-      {/* Header */}
       <div style={{
         position: 'relative', zIndex: 1,
         borderBottom: '1px solid rgba(212,175,100,0.12)',
@@ -156,8 +152,6 @@ export default function StatsPage() {
       </div>
 
       <div style={{ position: 'relative', zIndex: 1, padding: '40px 48px' }}>
-
-        {/* Summary cards */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -168,7 +162,7 @@ export default function StatsPage() {
             { label: 'Books Read', value: stats.totalBooksRead },
             { label: 'Pages Read', value: stats.totalPagesRead?.toLocaleString() || 0 },
             { label: 'Books This Month', value: booksThisMonth },
-            { label: 'Active Months', value: activeMonths},
+            { label: 'Active Months', value: activeMonths },
           ].map(card => (
             <div key={card.label} style={{
               ...cardStyle,
@@ -190,7 +184,6 @@ export default function StatsPage() {
           ))}
         </div>
 
-        {/* Books per month bar chart */}
         {stats.booksPerMonth.length > 0 && (
           <div style={{ ...cardStyle, marginBottom: '24px' }}>
             <h2 style={{
@@ -229,13 +222,12 @@ export default function StatsPage() {
                   cursor={{ fill: 'rgba(212,175,100,0.05)' }}
                   formatter={(value) => [`${value} books`, 'Read']}
                 />
-                <Bar dataKey="count" fill={barColor} radius={[6, 6, 0, 0]} fillOpacity={0.85} />
+                <Bar dataKey="count" fill='#b8905a' radius={[6, 6, 0, 0]} fillOpacity={0.85} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         )}
 
-        {/* Top genres — pie left, bars right */}
         {stats.topGenres.length > 0 && (
           <div style={{ ...cardStyle }}>
             <h2 style={{
@@ -245,8 +237,6 @@ export default function StatsPage() {
             }}>Top Genres</h2>
 
             <div style={{ display: 'flex', gap: '48px', alignItems: 'center', flexWrap: 'wrap' }}>
-
-              {/* Pie chart */}
               <div style={{ flexShrink: 0 }}>
                 <PieChart width={300} height={300}>
                   <Pie
@@ -275,7 +265,6 @@ export default function StatsPage() {
                 </PieChart>
               </div>
 
-              {/* Genre bars */}
               <div style={{
                 flex: 1, minWidth: '220px',
                 display: 'flex', flexDirection: 'column', gap: '18px',

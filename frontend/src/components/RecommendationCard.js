@@ -12,24 +12,15 @@ export default function RecommendationCard({ book, rank, reason, geminiMode }) {
       const author = (book.authors || [])[0] || book.author || '';
       fetch(`http://localhost:3001/api/books/cover-lookup?title=${encodeURIComponent(book.title)}&author=${encodeURIComponent(author)}`)
         .then(res => res.json())
-        .then(async data => {
+        .then(data => {
           if (data.cover_image_url) {
             setCoverUrl(data.cover_image_url);
-            // Save cover to DB so book detail page shows the same cover
-            if (book.id && typeof book.id === 'number') {
-              try {
-                await fetch(`http://localhost:3001/api/books/${book.id}/cover`, {
-                  method: 'PATCH',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ cover_image_url: data.cover_image_url }),
-                });
-              } catch (e) { /* silent fail */ }
-            }
           }
         })
         .catch(() => {});
     }
   }, [book.title, book.id, book.author, book.authors, coverUrl]);
+
   const handleClick = async () => {
     if (book.id && typeof book.id === 'number') {
       navigate(`/books/${book.id}`);

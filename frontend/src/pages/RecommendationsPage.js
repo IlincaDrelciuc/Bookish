@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiCall } from '../utils/api';
 import RecommendationRow from '../components/RecommendationRow';
 
-export default function RecommendationsTestPage() {
+export default function RecommendationsPage() {
   const { token } = useAuth();
   const [sqlRecs, setSqlRecs] = useState([]);
   const [geminiRecs, setGeminiRecs] = useState([]);
@@ -23,7 +23,6 @@ export default function RecommendationsTestPage() {
         const results = await Promise.all(
           (data.recommendations || []).map(async (r) => {
             try {
-              // Step 1 — search local DB for exact title match
               const searchResults = await apiCall(
                 'GET',
                 `/books/search?query=${encodeURIComponent(r.title)}&limit=5`
@@ -46,7 +45,6 @@ export default function RecommendationsTestPage() {
                 };
               }
 
-              // Step 2 — not in local DB, try Google Books
               const combined = await apiCall(
                 'GET',
                 `/books/search/combined?query=${encodeURIComponent(r.title)}`
@@ -58,7 +56,6 @@ export default function RecommendationsTestPage() {
               ) || googleResults[0];
 
               if (googleMatch) {
-                // Import into DB so it works like any other book
                 const imported = await apiCall('POST', '/books/import', {
                   google_books_id: googleMatch.google_books_id,
                   title: googleMatch.title,
@@ -82,7 +79,6 @@ export default function RecommendationsTestPage() {
                 };
               }
 
-              // Step 3 — last resort, use best local partial match
               const partialMatch = Array.isArray(searchResults)
                 ? searchResults[0]
                 : null;
@@ -98,7 +94,6 @@ export default function RecommendationsTestPage() {
                 };
               }
 
-              // Drop it — couldn't find it anywhere
               return null;
 
             } catch (err) {
